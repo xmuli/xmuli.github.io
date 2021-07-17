@@ -1,0 +1,171 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="偕臧"><meta name="copyright" content="偕臧"><meta name="generator" content="Hexo 5.4.0"><meta name="theme" content="hexo-theme-yun"><title>自学时在探索地，你可以系统的学习计算机知识体系结构(大学生) | 偕臧</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.24/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_ed8vp4atwoj.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link id="light-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism.css" media="(prefers-color-scheme: light)"><link id="dark-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: dark)"><link rel="shortcut icon" type="image/svg+xml" href="/favicon.ico"><link rel="mask-icon" href="/favicon.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/js/utils.js" as="script"><link rel="preload" href="/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"hostname":"ifmet.cn","root":"/","title":"偕臧的小站","version":"1.5.2","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"local_search":{"path":"/search.xml"},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/utils.js"></script><script src="/js/hexo-theme-yun.js"></script><link rel="alternate" href="/atom.xml" title="偕臧" type="application/atom+xml"><link rel="preconnect" href="https://www.google-analytics.com" crossorigin><script async src="https://www.googletagmanager.com/gtag/js?id=UA-160972149-1"></script><script>if (CONFIG.hostname === location.hostname) {
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-160972149-1');
+}</script><meta name="description" content="简  述：　提供一些自学编程的途径，或许你有心改变现状，但是无知从何处寻找资源开始，本篇所指☞的地方，你可以去康康~ 会找到很多的免费、精品的编程相关的资料学习视频">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自学时在探索地，你可以系统的学习计算机知识体系结构(大学生)">
+<meta property="og:url" content="https://ifmet.cn/posts/5dd74780/index.html">
+<meta property="og:site_name" content="偕臧">
+<meta property="og:description" content="简  述：　提供一些自学编程的途径，或许你有心改变现状，但是无知从何处寻找资源开始，本篇所指☞的地方，你可以去康康~ 会找到很多的免费、精品的编程相关的资料学习视频">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200607233630.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200607230911.png">
+<meta property="article:published_time" content="2020-06-07T22:29:16.000Z">
+<meta property="article:modified_time" content="2020-06-07T22:29:16.000Z">
+<meta property="article:author" content="偕臧">
+<meta property="article:tag" content="偕臧, xmuli, c++, Qt, 哲学">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200607233630.png"><script src="/js/ui/mode.js"></script></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="偕臧"><img width="96" loading="lazy" src="/xmuli.png" alt="偕臧"><span class="site-author-status" title="一片四叶幸运草">🍀</span></a><div class="site-author-name"><a href="/about/">偕臧</a></div><a class="site-name" href="/about/site.html">偕臧</a><sub class="site-subtitle"></sub><div class="site-desciption">看待世界始终保持着好奇</div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">245</span></a></div><div class="site-state-item"><a href="/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">25</span></a></div><div class="site-state-item"><a href="/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">29</span></a></div><a class="site-state-item hty-icon-button" href="https://ifmet.cn/about" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><div class="links-of-author"><a class="links-of-author-item hty-icon-button" rel="noopener" href="/atom.xml" title="RSS" target="_blank" style="color:orange"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-rss-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="http://sighttp.qq.com/authd?IDKEY=31f3ef7312b39e2c8dc822ae2f4c3b3118e1a6f31cc83373" title="QQ" target="_blank" style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://github.com/xmuli" title="GitHub" target="_blank" style="color:#181717"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-github-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="mailto:xmulitech@gmail.com" title="E-Mail" target="_blank" style="color:#8E71C1"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-mail-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://space.bilibili.com/106940738" title="哔哩哔哩动画" target="_blank" style="color:#FF8EB3"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-bilibili-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://twitter.com/xmulite" title="Twitter" target="_blank" style="color:#1da1f2"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-twitter-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://t.me/xmuli" title="Telegram" target="_blank" style="color:#0088CC"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-telegram-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://xmuli.blog.csdn.net" title="Travelling" target="_blank" style="color:var(--hty-text-color)"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-send-plane-2-line"></use></svg></a></div><hr style="margin:0.5rem 1rem"><div class="links"><a class="links-item hty-icon-button" href="/links/" title="友链直达" style="color:dodgerblue"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-women-line"></use></svg></a><a class="links-item hty-icon-button" href="/learn/" title="学习他人" style="color:Pink"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-heart-line"></use></svg></a></div><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%97%E4%BC%97%E4%BA%BA%E7%BE%A4%EF%BC%9A"><span class="toc-number">1.</span> <span class="toc-text">受众人群：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%A6%E4%B9%A0%E6%96%B9%E5%BC%8F%EF%BC%9A"><span class="toc-number">2.</span> <span class="toc-text">学习方式：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E7%82%B9%E7%A2%8E%E7%A2%8E%E5%BF%B5%EF%BC%9A"><span class="toc-number">3.</span> <span class="toc-text">一点碎碎念：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%8D%E8%B4%B9%E5%AD%A6%E4%B9%A0%E7%9A%84%E5%9C%B0%E6%96%B9%EF%BC%9A"><span class="toc-number">4.</span> <span class="toc-text">免费学习的地方：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%93%E5%B0%BE%EF%BC%9A"><span class="toc-number">5.</span> <span class="toc-text">结尾：</span></a></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="https://ifmet.cn/posts/5dd74780/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="偕臧"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="偕臧"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">自学时在探索地，你可以系统的学习计算机知识体系结构(大学生)<a class="post-edit-link" href="https://github.com/xmuli/xmuliMark/tree/master/source/_posts/自学时在探索地，你可以系统的学习计算机知识体系结构(大学生).md" target="_blank" title="编辑" rel="noopener"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-edit-line"></use></svg></a></h1><div class="post-meta"><div class="post-time" style="display:block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2020-06-07 22:29:16" itemprop="dateCreated datePublished" datetime="2020-06-07T22:29:16+00:00">2020-06-07</time></div><span class="post-count"><span class="post-symbolcount"><span class="post-meta-item-icon" title="本文字数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-file-word-line"></use></svg></span> <span title="本文字数">1.4k</span><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读时长"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-timer-line"></use></svg></span> <span title="阅读时长">4m</span></span></span><span class="leancloud_visitors" id="/posts/5dd74780/" data-flag-title="自学时在探索地，你可以系统的学习计算机知识体系结构(大学生)"><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读次数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-eye-line"></use></svg> <span class="leancloud-visitors-count"></span></span></span><div class="post-classify"><span class="post-category"> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/categories/%E8%B5%84%E6%BA%90-%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E8%B5%84%E6%96%99-%F0%9F%93%9A-or-%F0%9F%8E%AC/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">资源 - 编程语言资料(📚 or 🎬)</span></a></span></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><p>　　<strong>简  述：</strong>　提供一些自学编程的途径，或许你有心改变现状，但是无知从何处寻找资源开始，本篇所指☞的地方，你可以去康康~ 会找到很多的免费、精品的编程相关的资料学习视频</p>
+<span id="more"></span>
+
+<p>[TOC]</p>
+<br>
+
+<blockquote>
+<p><font color=#D0087E size=4 face="STFangsong">本文初发于 <strong>“偕臧的小站”</strong>  <a href="https://ifmet.cn/">ifmet.cn</a>，同步转载于此。</font></p>
+</blockquote>
+<br>
+
+<h3 id="受众人群："><a href="#受众人群：" class="headerlink" title="受众人群："></a>受众人群：</h3><p>本篇主要介绍一些能够自我学习编程的地方；最佳受众为才大一，计算机专业此刻正欲学习编程的大学生，尤其是想要学习编程，但是不知道该如何学习，夜晚很久才能入眠，着急未来（毕业👨‍🎓），且后面想从事此方面的工作的你；且尽可能不花钱，就不能够学习到相关知识就最佳。。。</p>
+<br>
+
+<h3 id="学习方式："><a href="#学习方式：" class="headerlink" title="学习方式："></a>学习方式：</h3><ul>
+<li>看编程网课🎬</li>
+<li>买编程书籍📚</li>
+<li>报培训班🏫</li>
+<li>有师兄师姐导师带着手把手教导</li>
+<li>自我学习（或许有更好的方式？？？ 我还未可知）</li>
+</ul>
+<br>
+
+<h3 id="一点碎碎念："><a href="#一点碎碎念：" class="headerlink" title="一点碎碎念："></a>一点碎碎念：</h3><p>学习编程比较晚，大二才开始正式学习，后面每天都学习到很晚，花时间去堆，一个按键一下下的敲击；初次完成一个项目出来的时候，感觉自己无所不能；后面将各门语言进行打通之间的墙壁，同时写了 c/s 和 b/s 端的项目，才感觉没那么慌张；再到后来，越得越多，越感觉无知；学海无涯，山外有山，乐于分享使得我开心即可。</p>
+<p>后来，总感觉自己是半路子出家学习编程，始终学习不够全面，和大牛们的学习相比，差的很远，虽后面重要相关课程都使劲学习，也掌握的还比较好，但是计算机迭代很快，我始终比较年轻；这篇文章，你若是应该是越早看见越好，但是现在看见其实也不晚；若是不知道该如何系列学习哪些课程，可以先按照这图学习：</p>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200607233630.png" width="100%"/ loading="lazy">
+
+<br>
+
+<h3 id="免费学习的地方："><a href="#免费学习的地方：" class="headerlink" title="免费学习的地方："></a>免费学习的地方：</h3><p>这里主要介绍一些我曾经学过的好的地方，很早之前就想分享出来了，但是一直拖到现在才出此篇文章 <strong>这里主要介绍两个地方，一个看网课，另外一个看博客：</strong> </p>
+<br>
+
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://next.xuetangx.com/">学堂在线</a></p>
+<p>课程虽少，但所讲全部精品和免费，清华、北大、科技大、科技大、麻省等国际名校老师精品课程，推荐：★★★★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="http://yun.itheima.com/course">黑马程序员</a></p>
+<p>很多免费视频教学（早期收费课程公开），课程诙谐有趣，听着比较津津有味，课程很多，个人早期经常这里来找资料，推荐：★★★★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://study.163.com/">网易云课堂</a></p>
+<p>一个课程很齐全的，授课质量也很好的地方，其中免费精品课程很多，推荐：★★★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.imooc.com/">慕课网</a></p>
+<p>课程没有上面那么多，但是也有很多免费精品课程，推荐：★★★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.icourse163.org/">中国大学 MOOC</a></p>
+<p>国家精品课程，大学慕课，课程较少，免费的精品，推荐：★★★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.youtube.com/">youtube</a></p>
+<p>英文够好非常推荐，最能接近一手学习资料的地方，没有字幕的话，可以使用实时生成英文字幕，然后电脑机译为中文，也可以学习，但内容需要自己寻找，推荐：★★★★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.bilibili.com/">哔哩哔哩</a></p>
+<p>二次元聚集地，很多野生 up 主上传的自我学习教程，也可以找到一些比较不错的编程课程，总的来说稂莠不齐，鱼龙混杂，自我判断，但内容需要自己寻找，推荐：★★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://open.163.com/">网易公开课</a></p>
+<p>课程较少，非编程类的比较多，时不时学一点其他感兴趣的课程也很不错，推荐：★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.wanmen.org/">万门大学</a></p>
+<p>用过几次，没有我想要的课程，大多为付费课程，推荐：★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.51zxw.net/">我要自学网</a></p>
+<p>用的不多，没有前面广和精品，时不时也有惊喜，推荐：★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.yiihuu.com/">翼狐网</a></p>
+<p>用的比较少，不算很了解，推荐：★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.runoob.com/">菜鸟教程</a></p>
+<p>很实用，言简意赅，教程如其名，教你快速入门的基础，出进陌生语言，会看一看，推荐：★★★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.w3school.com.cn/">w3school</a></p>
+<p>基本都是前端，也可以当做一个电子词典查询和前端入门的知识，推荐：★★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="http://www.watchmen.cn/video/algorithm/">守望者</a></p>
+<p>可以学习到一些数据结构和算法的视频讲解，推荐：★★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.51cto.com/">51cto</a></p>
+<p>博客比较多，很多文章写的比较好，推荐：★★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="http://www.eimhe.com/">美河学习在线</a></p>
+<p>用的比较少，不算很了解，推荐：★★</p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://github.com/">github</a></p>
+<p>国际的代码学习圣地，一定要学会使用，直接学习牛人代码，爆炸推荐，推荐：★★★★★★</p>
+</li>
+</ul>
+<p>附上的大概的 logo 集合，判断你找对了地方：</p>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200607230911.png" width="50%"/ loading="lazy">
+
+<br>
+
+<p><strong>对于学习时候，如何寻找 error 的报错的解决方案：</strong></p>
+<p>看博客最快，强烈推荐 google 搜索、Bing 等，在才是 baidu；搜索结果，带有后缀表示：csdn、博客园、51cto、知乎 的文章可以优先看，其次再是个人博客，最后就是百度经验等文；</p>
+<br>
+
+<h3 id="结尾："><a href="#结尾：" class="headerlink" title="结尾："></a>结尾：</h3><p>学习这种事情，尤其是计算机这件事，只有一步一个👣，亲自去踩边很多坑，后面才会避过，欲速则不达，慢就是快，不出错就是快，做好笔记和分享，尝试写博客进行知识分享，然后去享受它们。若是对你有帮助，可以将此文点赞分享给你的朋友，大家一起学习，路上不寂寞也不枯燥，我也很享受分享这份分享的快乐，你能够帮我传播也就更棒了</p>
+</div><div id="reward-container"><span class="hty-icon-button button-glow" id="reward-button" title="打赏" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === &quot;none&quot;) ? &quot;block&quot; : &quot;none&quot;;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-hand-coin-line"></use></svg></span><div id="reward-comment">若文章有所感所获，亦可请我共饮一杯肥宅冰阔落；</div><div id="qr" style="display:none;"><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png" alt="支付宝" title="支付宝"></a><div><span style="color:#00A3EE"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-alipay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png" alt="微信支付" title="微信支付"></a><div><span style="color:#2DC100"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-wechat-pay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png" alt="QQ 支付" title="QQ 支付"></a><div><span style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></span></div></div></div></div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>偕臧</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="https://ifmet.cn/posts/5dd74780/" title="自学时在探索地，你可以系统的学习计算机知识体系结构(大学生)">https://ifmet.cn/posts/5dd74780/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"><a class="post-nav-prev" href="/posts/edb355c4/" rel="prev" title="github加载图片丢失解决方案"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-left-s-line"></use></svg><span class="post-nav-text">github加载图片丢失解决方案</span></a></div><div class="post-nav-item"><a class="post-nav-next" href="/posts/db5a13a5/" rel="next" title="重装uos/deepin v20后必安装软件(个人习惯)"><span class="post-nav-text">重装uos/deepin v20后必安装软件(个人习惯)</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div class="hty-card" id="comment"><div class="comment-tooltip text-center"><span></span><br></div><div id="valine-container"></div><script>Yun.utils.getScript("https://cdn.jsdelivr.net/npm/valine@latest/dist/Valine.min.js", () => {
+  const valineConfig = {"enable":true,"appId":"j1ERzyBCVwKtzx1t7EOv5ur8-MdYXbMMI","appKey":"EuraMPDEgt5G8iLWSNrkQ49n","placeholder":"不同的观点和想法相遇，促进彼此的成长，当然，这里也可以俏皮一下 (´・ω・`) ~~~ (填写邮箱可以收到回复)","avatar":"wavatar","pageSize":10,"visitor":true,"highlight":true,"recordIP":true,"enableQQ":true,"meta":["nick","mail","link"],"el":"#valine-container","lang":"zh-cn"}
+  valineConfig.path = "/posts/5dd74780/"
+  new Valine(valineConfig)
+}, window.Valine);</script></div></main><footer class="sidebar-translate" id="footer"><div class="beian"><a rel="noopener" href="https://beian.miit.gov.cn/" target="_blank">鄂ICP备2021002780号</a></div><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> 偕臧</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.4.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.5.2</span></div><div class="live_time"><span>本博客已萌萌哒地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  setTimeout(blog_live_time, 1000);
+  const start = new Date('2019-06-09T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="goUp" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><a class="popup-trigger hty-icon-button icon-search" id="search" href="javascript:;" title="搜索"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-search-line"></use></svg></span></a><script>window.addEventListener("DOMContentLoaded", () => {
+  // Handle and trigger popup window
+  document.querySelector(".popup-trigger").addEventListener("click", () => {
+    document.querySelector(".popup").classList.add("show");
+    setTimeout(() => {
+      document.querySelector(".search-input").focus();
+    }, 100);
+  });
+
+  // Monitor main search box
+  const onPopupClose = () => {
+    document.querySelector(".popup").classList.remove("show");
+  };
+
+  document.querySelector(".popup-btn-close").addEventListener("click", () => {
+    onPopupClose();
+  });
+
+  window.addEventListener("keyup", event => {
+    if (event.key === "Escape") {
+      onPopupClose();
+    }
+  });
+});
+</script><script src="/js/search/local-search.js" defer></script><div class="popup search-popup"><div class="search-header"><span class="popup-btn-close close-icon hty-icon-button"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-close-line"></use></svg></span></div><div class="search-input-container"><input class="search-input" id="local-search-input" type="text" placeholder="搜索..." value=""></div><div id="local-search-result"></div></div><script>const date = new Date();
+const today = (date.getMonth() + 1) + "-" + date.getDate()
+const mourn_days = ["4-4"]
+if (mourn_days.includes(today)) {
+  document.documentElement.style.filter = "grayscale(1)";
+}</script></div></body></html>

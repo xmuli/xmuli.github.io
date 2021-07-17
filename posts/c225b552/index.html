@@ -1,0 +1,560 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="偕臧"><meta name="copyright" content="偕臧"><meta name="generator" content="Hexo 5.4.0"><meta name="theme" content="hexo-theme-yun"><title>Deepin 开发任务栏网速插件 lfxSpeed | 偕臧</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.24/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_ed8vp4atwoj.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link id="light-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism.css" media="(prefers-color-scheme: light)"><link id="dark-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: dark)"><link rel="shortcut icon" type="image/svg+xml" href="/favicon.ico"><link rel="mask-icon" href="/favicon.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/js/utils.js" as="script"><link rel="preload" href="/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"hostname":"ifmet.cn","root":"/","title":"偕臧的小站","version":"1.5.2","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"local_search":{"path":"/search.xml"},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/utils.js"></script><script src="/js/hexo-theme-yun.js"></script><link rel="alternate" href="/atom.xml" title="偕臧" type="application/atom+xml"><link rel="preconnect" href="https://www.google-analytics.com" crossorigin><script async src="https://www.googletagmanager.com/gtag/js?id=UA-160972149-1"></script><script>if (CONFIG.hostname === location.hostname) {
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-160972149-1');
+}</script><meta name="description" content="简  述：　在 DDE 桌面环境中开发 dde-dock 插件 项目实战： 网速插件 lfxSpeed；">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Deepin 开发任务栏网速插件 lfxSpeed">
+<meta property="og:url" content="https://ifmet.cn/posts/c225b552/index.html">
+<meta property="og:site_name" content="偕臧">
+<meta property="og:description" content="简  述：　在 DDE 桌面环境中开发 dde-dock 插件 项目实战： 网速插件 lfxSpeed；">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/Peek%202020-12-04%2015-19.gif">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20201204203142.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20201204152635.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/image-20201117165447548.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20201202110836.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20201202132456.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20201202140839.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20201204195032.png">
+<meta property="article:published_time" content="2020-12-04T20:33:29.000Z">
+<meta property="article:modified_time" content="2020-12-04T20:33:29.000Z">
+<meta property="article:author" content="偕臧">
+<meta property="article:tag" content="Deepin">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/Peek%202020-12-04%2015-19.gif"><script src="/js/ui/mode.js"></script></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="偕臧"><img width="96" loading="lazy" src="/xmuli.png" alt="偕臧"><span class="site-author-status" title="一片四叶幸运草">🍀</span></a><div class="site-author-name"><a href="/about/">偕臧</a></div><a class="site-name" href="/about/site.html">偕臧</a><sub class="site-subtitle"></sub><div class="site-desciption">看待世界始终保持着好奇</div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">245</span></a></div><div class="site-state-item"><a href="/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">25</span></a></div><div class="site-state-item"><a href="/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">29</span></a></div><a class="site-state-item hty-icon-button" href="https://ifmet.cn/about" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><div class="links-of-author"><a class="links-of-author-item hty-icon-button" rel="noopener" href="/atom.xml" title="RSS" target="_blank" style="color:orange"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-rss-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="http://sighttp.qq.com/authd?IDKEY=31f3ef7312b39e2c8dc822ae2f4c3b3118e1a6f31cc83373" title="QQ" target="_blank" style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://github.com/xmuli" title="GitHub" target="_blank" style="color:#181717"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-github-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="mailto:xmulitech@gmail.com" title="E-Mail" target="_blank" style="color:#8E71C1"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-mail-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://space.bilibili.com/106940738" title="哔哩哔哩动画" target="_blank" style="color:#FF8EB3"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-bilibili-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://twitter.com/xmulite" title="Twitter" target="_blank" style="color:#1da1f2"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-twitter-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://t.me/xmuli" title="Telegram" target="_blank" style="color:#0088CC"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-telegram-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://xmuli.blog.csdn.net" title="Travelling" target="_blank" style="color:var(--hty-text-color)"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-send-plane-2-line"></use></svg></a></div><hr style="margin:0.5rem 1rem"><div class="links"><a class="links-item hty-icon-button" href="/links/" title="友链直达" style="color:dodgerblue"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-women-line"></use></svg></a><a class="links-item hty-icon-button" href="/learn/" title="学习他人" style="color:Pink"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-heart-line"></use></svg></a></div><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%83%8C%E6%99%AF"><span class="toc-number">1.</span> <span class="toc-text">背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A2%84%E8%A7%88"><span class="toc-number">2.</span> <span class="toc-text">预览</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%96%E8%AF%91"><span class="toc-number">3.</span> <span class="toc-text">编译</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF"><span class="toc-number">4.</span> <span class="toc-text">思路</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%92%E4%BB%B6%E5%8E%9F%E7%90%86"><span class="toc-number">4.1.</span> <span class="toc-text">插件原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#lfxSpeed-%E5%8E%9F%E7%90%86"><span class="toc-number">4.2.</span> <span class="toc-text">lfxSpeed 原理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96%E7%B3%BB%E7%BB%9F%E5%8F%82%E6%95%B0"><span class="toc-number">5.</span> <span class="toc-text">获取系统参数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#proc-%E4%BB%8B%E7%BB%8D"><span class="toc-number">5.1.</span> <span class="toc-text">&#x2F;proc 介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96%E7%BD%91%E9%80%9F"><span class="toc-number">5.2.</span> <span class="toc-text">获取网速</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%BB%E5%8F%96%E6%96%87%E4%BB%B6"><span class="toc-number">5.2.1.</span> <span class="toc-text">读取文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF-1"><span class="toc-number">5.2.2.</span> <span class="toc-text">思路</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81"><span class="toc-number">5.2.3.</span> <span class="toc-text">代码</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96CPU"><span class="toc-number">5.3.</span> <span class="toc-text">获取CPU</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%BB%E5%8F%96%E6%96%87%E4%BB%B6-1"><span class="toc-number">5.3.1.</span> <span class="toc-text">读取文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF-2"><span class="toc-number">5.3.2.</span> <span class="toc-text">思路</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81-1"><span class="toc-number">5.3.3.</span> <span class="toc-text">代码</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96%E5%86%85%E5%AD%98"><span class="toc-number">5.4.</span> <span class="toc-text">获取内存</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%BB%E5%8F%96%E6%96%87%E4%BB%B6-2"><span class="toc-number">5.4.1.</span> <span class="toc-text">读取文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF-3"><span class="toc-number">5.4.2.</span> <span class="toc-text">思路</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81-2"><span class="toc-number">5.4.3.</span> <span class="toc-text">代码</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96%E7%B3%BB%E7%BB%9F%E8%BF%90%E8%A1%8C%E6%97%B6%E9%97%B4"><span class="toc-number">5.5.</span> <span class="toc-text">获取系统运行时间</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%BB%E5%8F%96%E6%96%87%E4%BB%B6-3"><span class="toc-number">5.5.1.</span> <span class="toc-text">读取文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF-4"><span class="toc-number">5.5.2.</span> <span class="toc-text">思路</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81-3"><span class="toc-number">5.5.3.</span> <span class="toc-text">代码</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%BB%E5%8A%A1%E6%A0%8F-1-2-2-%E7%9A%84%E7%BC%BA%E9%99%B7"><span class="toc-number">6.</span> <span class="toc-text">任务栏 1.2.2 的缺陷</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9B%B4%E6%96%B0-2020-12-28"><span class="toc-number">7.</span> <span class="toc-text">更新 2020-12-28</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80%EF%BC%9A"><span class="toc-number">8.</span> <span class="toc-text">下载地址：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-number">9.</span> <span class="toc-text">参考:</span></a></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="https://ifmet.cn/posts/c225b552/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="偕臧"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="偕臧"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Deepin 开发任务栏网速插件 lfxSpeed<a class="post-edit-link" href="https://github.com/xmuli/xmuliMark/tree/master/source/_posts/Deepin 开发任务栏网速插件 lfxSpeed.md" target="_blank" title="编辑" rel="noopener"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-edit-line"></use></svg></a></h1><div class="post-meta"><div class="post-time" style="display:block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2020-12-04 20:33:29" itemprop="dateCreated datePublished" datetime="2020-12-04T20:33:29+00:00">2020-12-04</time></div><span class="post-count"><span class="post-symbolcount"><span class="post-meta-item-icon" title="本文字数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-file-word-line"></use></svg></span> <span title="本文字数">4.5k</span><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读时长"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-timer-line"></use></svg></span> <span title="阅读时长">18m</span></span></span><span class="leancloud_visitors" id="/posts/c225b552/" data-flag-title="Deepin 开发任务栏网速插件 lfxSpeed"><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读次数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-eye-line"></use></svg> <span class="leancloud-visitors-count"></span></span></span><div class="post-classify"><span class="post-category"> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/categories/%E5%AD%A6%E4%B9%A0-Linux/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">学习 - Linux</span></a></span> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/categories/%E5%AD%A6%E4%B9%A0-Qt/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">学习 - Qt</span></a></span> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/categories/%E4%B8%93%E6%A0%8F-Qt%E6%8E%A8%E5%80%92%E9%87%8D%E5%AD%A6%E7%B3%BB%E5%88%97/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">专栏 - Qt推倒重学系列</span></a></span> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/categories/%E5%AD%A6%E4%B9%A0-%E9%A1%B9%E7%9B%AE%E5%AE%9E%E6%88%98%E5%BC%80%E5%8F%91/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">学习 - 项目实战开发</span></a></span></span><span class="post-tag"><span class="post-meta-divider">-</span><a class="tag" href="/tags/Deepin/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">Deepin</span></a></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><p><strong>简  述：</strong>　在 <code>DDE</code> 桌面环境中开发 <code>dde-dock 插件</code> 项目实战： 网速插件 <code>lfxSpeed</code>；</p>
+<img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/Peek%202020-12-04%2015-19.gif" width="50%"/ loading="lazy">
+
+<span id="more"></span>
+
+<p>[TOC]</p>
+<br>
+
+<blockquote>
+<p><font color=#D0087E size=4 face="STFangsong">本文初发于 <strong>“偕臧的小站”</strong>  <a href="https://ifmet.cn/">ifmet.cn</a>，同步转载于此。</font></p>
+</blockquote>
+<br>
+
+
+<blockquote>
+<p> ———–2020-02-03 更新——————-<br>现在更推荐新版网速插件：<a target="_blank" rel="noopener" href="https://github.com/xmuli/lfxNet">lfxNet</a>， 文章描述：<a target="_blank" rel="noopener" href="https://xmuli.blog.csdn.net/article/details/113573870">Deepin 任务栏网速插件推荐 lfxNet (重构 lfxSpeed)</a></p>
+</blockquote>
+<br>
+
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>因 <code>DDE</code>  属实漂亮，使用美观舒适，作为 <code>Deepin</code> 爱好者，习惯于在其它系统上有一个任务栏网速插件，但此 <code>Deepin v20 / UOS v20</code>上没有，于是便有了这个项目。适用于 <code>DDE</code> 的 <code>Linux</code> 发行版。</p>
+<br>
+
+<h2 id="预览"><a href="#预览" class="headerlink" title="预览"></a>预览</h2><p><strong>已实现功能：</strong></p>
+<ul>
+<li>实时显示网速、CPU 、内存使用率</li>
+<li>自定义网速精确度</li>
+<li>自定义修改标签</li>
+<li>自定义刷新时间</li>
+<li>显示或隐藏某一信息栏</li>
+<li>网速单位显示模式三种</li>
+<li>浅色 / 暗色 主题模式</li>
+</ul>
+<p><strong>项目预览图：</strong></p>
+<p>  <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20201204203142.png" width="50%"/ loading="lazy">  <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20201204152635.png" width="35%"/ loading="lazy"></p>
+<br>
+
+<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>开发环境 <strong>💻：</strong>  <code>uos20</code> 📎 <code>Qt 5.11.3</code> 📎  <code>dde-dock = 5.2.0.24</code> 📎  <code>&quot;1.2.2&quot; 版本</code>；安装开发包，</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt-get</span> <span class="token function">install</span> libdtkwidget-dev
+<span class="token function">sudo</span> <span class="token function">apt-get</span> <span class="token function">install</span> dde-dock-dev<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+
+
+<p>下载 <a target="_blank" rel="noopener" href="https://github.com/xmuli/lfxspeed">源码</a> 后，进入项目根目录，进行编译</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">mkdir</span> build <span class="token operator">&amp;&amp;</span> <span class="token builtin class-name">cd</span> build
+cmake <span class="token punctuation">..</span>
+<span class="token function">make</span> -j16<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+
+
+<p>会生成一个 <code>liblfxSpeed.so</code> 共享库，在其路径下执行如下命令，若希望看到效果，需要执行 <code>killall dde-dock</code> 、<code>dde-dock</code> 后生效；</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">cp</span> liblfxSpeed.so /usr/lib/dde-dock/plugins     <span class="token comment"># 安装</span>
+<span class="token function">sudo</span> <span class="token function">rm</span> -rf /usr/lib/dde-dock/plugins/liblfxSpeed.so <span class="token comment">#  卸载</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<br>
+
+<h2 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h2><h3 id="插件原理"><a href="#插件原理" class="headerlink" title="插件原理"></a>插件原理</h3><p>项目最后生成一个动态库，原理是 <code>dde-dock</code> 使用了 <code>Qt5</code> 的插件机制，在运行时候加载动态库。</p>
+<p>有一篇 <code>Deepin</code> 官方出的教程，是隐藏 <code>dde-dock </code>项目之中 <a target="_blank" rel="noopener" href="https://github.com/linuxdeepin/dde-dock/blob/master/plugins/plugin-guide/plugins-developer-guide.md">plugins-developer-guide</a> 感觉成了一个小彩蛋；这篇文章对插件接口写的很详细，也有一个自带的小例子，讲解的很清晰；</p>
+<p><strong>主要工作就是，继承如下两个类：</strong></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/linuxdeepin/dde-dock/blob/master/interfaces/pluginproxyinterface.h">pluginproxyinterface.h</a> ：可以主动去调用 dde-dock 的接口，用来管理 插件 的管理类</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/linuxdeepin/dde-dock/blob/master/interfaces/pluginsiteminterface.h">pluginsiteminterface.h</a> ：被动的被 dock 调用</li>
+</ul>
+<p>而自己新写的插件类，是必须同时继承两个类的：如 <code>class SpeedPlugin : public QObject, public PluginsItemInterface</code> 。实现一个最简单的插件类，重写下面前六个函数即可；若加更多功能，再重其它函数即可</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token comment">// 插件必须重写函数</span>
+<span class="token keyword">virtual</span> <span class="token keyword">const</span> QString <span class="token function">pluginName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">const</span> override<span class="token punctuation">;</span>
+<span class="token keyword">virtual</span> <span class="token keyword">void</span> <span class="token function">init</span><span class="token punctuation">(</span>PluginProxyInterface <span class="token operator">*</span>proxyInter<span class="token punctuation">)</span> override<span class="token punctuation">;</span>
+<span class="token keyword">virtual</span> QWidget <span class="token operator">*</span><span class="token function">itemWidget</span><span class="token punctuation">(</span><span class="token keyword">const</span> QString <span class="token operator">&amp;</span>itemKey<span class="token punctuation">)</span> override<span class="token punctuation">;</span>
+
+<span class="token comment">// 插件禁用和启用相关的接口</span>
+<span class="token keyword">virtual</span> <span class="token keyword">bool</span> <span class="token function">pluginIsAllowDisable</span><span class="token punctuation">(</span><span class="token punctuation">)</span> override<span class="token punctuation">;</span>
+<span class="token keyword">virtual</span> <span class="token keyword">bool</span> <span class="token function">pluginIsDisable</span><span class="token punctuation">(</span><span class="token punctuation">)</span> override<span class="token punctuation">;</span>
+<span class="token keyword">virtual</span> <span class="token keyword">void</span> <span class="token function">pluginStateSwitched</span><span class="token punctuation">(</span><span class="token punctuation">)</span> override<span class="token punctuation">;</span>
+
+<span class="token comment">// 额外的功能：预览、右键菜单、悬浮显示</span>
+<span class="token keyword">virtual</span> <span class="token keyword">const</span> QString <span class="token function">pluginDisplayName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">const</span> override<span class="token punctuation">;</span>
+<span class="token keyword">virtual</span> <span class="token keyword">const</span> QString <span class="token function">itemContextMenu</span><span class="token punctuation">(</span><span class="token keyword">const</span> QString <span class="token operator">&amp;</span>itemKey<span class="token punctuation">)</span> override<span class="token punctuation">;</span>
+<span class="token keyword">virtual</span> <span class="token keyword">void</span> <span class="token function">invokedMenuItem</span><span class="token punctuation">(</span><span class="token keyword">const</span> QString <span class="token operator">&amp;</span>itemKey<span class="token punctuation">,</span> <span class="token keyword">const</span> QString <span class="token operator">&amp;</span>menuId<span class="token punctuation">,</span> <span class="token keyword">const</span> <span class="token keyword">bool</span> checked<span class="token punctuation">)</span> override<span class="token punctuation">;</span>
+<span class="token keyword">virtual</span> QWidget <span class="token operator">*</span><span class="token function">itemTipsWidget</span><span class="token punctuation">(</span><span class="token keyword">const</span> QString <span class="token operator">&amp;</span>itemKey<span class="token punctuation">)</span> override<span class="token punctuation">;</span>
+
+<span class="token comment">// 更多其它...</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<br>
+
+<h3 id="lfxSpeed-原理"><a href="#lfxSpeed-原理" class="headerlink" title="lfxSpeed 原理"></a>lfxSpeed 原理</h3><p>基本思路为 获取 <code>/proc</code> 文件，然后通过计算，转换单位等，只显示自己想要的结果；然后将其显示在控件布局之中，最后将整个控件显示在任务栏上（返回其对象的指针给 dock）；<strong>下面讲解如何从 <code>Linux</code> 通过 <code>/proc</code> 获取系统网速、CPU、Memory和运行时间等信息。</strong></p>
+<br>
+
+<h2 id="获取系统参数"><a href="#获取系统参数" class="headerlink" title="获取系统参数"></a>获取系统参数</h2><h3 id="proc-介绍"><a href="#proc-介绍" class="headerlink" title="/proc 介绍"></a><code>/proc</code> 介绍</h3><p>Linux系统上的/proc目录是一种文件系统，即proc文件系统。与其它常见的文件系统不同的是，/proc是一种伪文件系统（也即虚拟文件系统），存储的是当前内核运行状态的一系列特殊文件，用户可以通过这些文件查看有关系统硬件及当前正在运行进程的信息，甚至可以通过更改其中某些文件来改变内核的运行状态。</p>
+<p>基于/proc文件系统如上所述的特殊性，其内的文件也常被称作虚拟文件，并具有一些独特的特点。例如，其中有些文件虽然使用查看命令查看时会返回大量信息，但文件本身的大小却会显示为0字节。此外，这些特殊文件中大多数文件的时间及日期属性通常为当前系统时间和日期，这跟它们随时会被刷新（存储于RAM中）有关。</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token comment">// 更多文件的获取，可以参考 https://zh.m.wikipedia.org/zh-cn/Procfs</span>
+
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">PROC_PATH_UPTIME</span>    <span class="token string">"/proc/uptime"</span>      <span class="token comment">// "系统启动" 和 "系统空闲" 的时间</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">PROC_PATH_CPU</span>       <span class="token string">"/proc/stat"</span>        <span class="token comment">// "CPU" 使用率 的状态</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">PROC_PATH_MEM</span>       <span class="token string">"/proc/meminfo"</span>     <span class="token comment">// "内存" 和 "交换空间" 的状态</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">PROC_PATH_NET</span>       <span class="token string">"/proc/net/dev"</span>     <span class="token comment">// "网速" 下载和上传 的状态</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">PROC_PATH_DISK</span>      <span class="token string">"/proc/diskstats"</span>   <span class="token comment">// "磁盘" 读取和写入 的状态</span></span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<br>
+
+<h3 id="获取网速"><a href="#获取网速" class="headerlink" title="获取网速"></a>获取网速</h3><h4 id="读取文件"><a href="#读取文件" class="headerlink" title="读取文件"></a>读取文件</h4><p>网络相关的数据，从 <code>/proc/net/dev</code>  文件获取：读取此文件进行计算即可<img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/image-20201117165447548.png" width="100%"/ loading="lazy"></p>
+<p>这个文件每一行的详细含义如下：<strong>face: 接口</strong> </p>
+<p>​    ————————————-【接收】————————————-</p>
+<ol>
+<li><p><code>bytes:</code> 接口接收的数据的总字节数</p>
+</li>
+<li><p><code>packets:</code> 接口接收的数据包总数</p>
+</li>
+<li><p><code>errs:</code> 由设备驱动程序检测到接收错误的总数</p>
+</li>
+<li><p><code>drop:</code> 设备驱动程序丢弃的数据包总数</p>
+</li>
+<li><p><code>fifo:</code> FIFO缓冲区错误的数量</p>
+</li>
+<li><p><code>frame:</code> 分组帧错误的数量</p>
+</li>
+<li><p><code>compressed:</code> 设备驱动程序接收的压缩数据包数</p>
+</li>
+<li><p><code>multicast:</code> 设备驱动程序发送或接收的多播帧数</p>
+<p>————————————-【传送】————————————-</p>
+</li>
+<li><p><code>bytes:</code>  接口发送的数据的总字节数</p>
+</li>
+<li><p><code>packets:</code> 接口发送的数据包总数</p>
+</li>
+<li><p><code>errs:</code> 由设备驱动程序检测到的发送错误的总数</p>
+</li>
+<li><p><code>drop:</code> 同上</p>
+</li>
+<li><p><code>fifo:</code> 同上</p>
+</li>
+<li><p><code>colls:</code> 接口上检测到的冲突数</p>
+</li>
+<li><p><code>carrier:</code> 由设备驱动程序检测到的载波损耗的数量</p>
+</li>
+<li><p><code>compressed:</code> 设备驱动程序发送的压缩数据包数</p>
+</li>
+</ol>
+<p>需要注意的,，此处只是获取的为<strong>接口接收的数据的总字节数</strong> ，要获取实时速率，还得用起差值除以单位时间，才是网速。 <strong>其单位默认是字节</strong>。</p>
+<br>
+
+<h4 id="思路-1"><a href="#思路-1" class="headerlink" title="思路"></a>思路</h4><p>此文件是<strong>某一时刻的</strong>，本机所有接收和发送的<strong>数据包总量</strong> ，其分别对应每一行的第 1 列、第 9 列 （byte 一列）；（注：第 0 列是前面的英文字符串）</p>
+<p>将每一行的的第 2 列累加，为此时可总的接收数据包（下载）；将每一行的的第 10 列加，为此时总的发送数据包（上传）；然后将两次时刻之差 除以时间间隔，就得到单位时间网速；</p>
+<br>
+
+<h4 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h4><p><del>这里使用 <code>QRegExp(&quot;\\s&#123;1,&#125;&quot;)</code> 来分割，莫名会得到第一个切割为 <code>“”</code> 的字符串，所以对应的第 1和 9 列都要顺延加 1。</del> 此问题已经由 <a target="_blank" rel="noopener" href="https://github.com/xmuli/lfxSpeed/pull/5">#5</a> 修复</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token comment">/*!
+ * \brief SpeedInfo::netRate 获取网某一时刻的网络总的数据包量
+ * \param[out] netUpload 网络上传数据量
+ * \param[out] netUpload 网络下载数据量
+ */</span>
+<span class="token keyword">void</span> <span class="token class-name">SpeedInfo</span><span class="token operator">::</span><span class="token function">netRate</span><span class="token punctuation">(</span><span class="token keyword">long</span> <span class="token operator">&amp;</span>netDown<span class="token punctuation">,</span> <span class="token keyword">long</span> <span class="token operator">&amp;</span>netUpload<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    QFile <span class="token function">file</span><span class="token punctuation">(</span>PROC_PATH_NET<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>file<span class="token punctuation">.</span><span class="token function">open</span><span class="token punctuation">(</span>QIODevice<span class="token operator">::</span>ReadOnly <span class="token operator">|</span> QIODevice<span class="token operator">::</span>Text<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  <span class="token comment">// 在读取时，把行尾结束符修改为 '\n'； 在写入时，把行尾结束符修改为本地系统换行风格，比如Windows文本换行是 "\r\n"</span>
+        <span class="token function">qDebug</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">&lt;&lt;</span><span class="token string">"\"/proc/net/dev\" don't open!"</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">long</span> down <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token keyword">long</span> upload <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    QTextStream <span class="token function">stream</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>file<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    QString line <span class="token operator">=</span> stream<span class="token punctuation">.</span><span class="token function">readLine</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    line  <span class="token operator">=</span> stream<span class="token punctuation">.</span><span class="token function">readLine</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    line  <span class="token operator">=</span> stream<span class="token punctuation">.</span><span class="token function">readLine</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token operator">!</span>line<span class="token punctuation">.</span><span class="token function">isNull</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        line <span class="token operator">=</span> line<span class="token punctuation">.</span><span class="token function">trimmed</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        QStringList list <span class="token operator">=</span> line<span class="token punctuation">.</span><span class="token function">split</span><span class="token punctuation">(</span><span class="token function">QRegExp</span><span class="token punctuation">(</span><span class="token string">"\\s&#123;1,&#125;"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>   <span class="token comment">// 匹配任意 大于等于1个的 空白字符</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>list<span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            down <span class="token operator">=</span> list<span class="token punctuation">.</span><span class="token function">at</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toLong</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            upload <span class="token operator">=</span> list<span class="token punctuation">.</span><span class="token function">at</span><span class="token punctuation">(</span><span class="token number">9</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toLong</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+
+        netDown <span class="token operator">+=</span> down<span class="token punctuation">;</span>
+        netUpload <span class="token operator">+=</span> upload<span class="token punctuation">;</span>
+        line  <span class="token operator">=</span> stream<span class="token punctuation">.</span><span class="token function">readLine</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    file<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<br>
+
+<p>还需要将字节可以智能转换为对应的单位和对应的数值 的函数：</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token comment">/*!
+ * \brief SpeedInfo::autoRateUnits 自动显示单位
+ * \param[in] speed 传入的网速(无单位)
+ * \param[out] unit 智能调节后的网速的单位
+ * \param sensitive 速率单位的大小写模式
+ * \return 自能调节单位后的速率
+ */</span>
+<span class="token keyword">double</span> <span class="token class-name">SpeedInfo</span><span class="token operator">::</span><span class="token function">autoRateUnits</span><span class="token punctuation">(</span><span class="token keyword">long</span> speed<span class="token punctuation">,</span> SpeedInfo<span class="token operator">::</span>RateUnit <span class="token operator">&amp;</span>unit<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token comment">/* 自动判断合适的速率单位,默认传进来的是 Byte
+     * bit    0 ~ 7 位 (不到 1 字节)
+     * Byte   1    ~ 2^10  Byte
+     * KB     2^10 ~ 2^20  Byte
+     * MB     2^20 ~ 2^30  Byte
+     * GB     2^30 ~ 2^40  Byte
+     * TB     2^40 ~ 2^50  Byte
+     */</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>unit <span class="token operator">!=</span> SpeedInfo<span class="token operator">::</span>RateByte<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">qDebug</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">&lt;&lt;</span><span class="token string">"请先将单位转为字节(byte)后再传参"</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">double</span> sp <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token number">0</span> <span class="token operator">&lt;=</span> speed <span class="token operator">&amp;&amp;</span> speed <span class="token operator">&lt;</span> <span class="token function">qPow</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        unit <span class="token operator">=</span> SpeedInfo<span class="token operator">::</span>RateByte<span class="token punctuation">;</span>
+        sp <span class="token operator">=</span> speed<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">qPow</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">)</span> <span class="token operator">&lt;=</span> speed <span class="token operator">&amp;&amp;</span> speed <span class="token operator">&lt;</span> <span class="token function">qPow</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        unit <span class="token operator">=</span> SpeedInfo<span class="token operator">::</span>RateKb<span class="token punctuation">;</span>
+        sp <span class="token operator">=</span> <span class="token keyword">static_cast</span><span class="token operator">&lt;</span><span class="token keyword">double</span><span class="token operator">></span><span class="token punctuation">(</span>speed <span class="token operator">/</span> <span class="token function">qPow</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">10</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">1.0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">qPow</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">)</span> <span class="token operator">&lt;=</span> speed <span class="token operator">&amp;&amp;</span> speed <span class="token operator">&lt;</span> <span class="token function">qPow</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">30</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        unit <span class="token operator">=</span> SpeedInfo<span class="token operator">::</span>RateMb<span class="token punctuation">;</span>
+        sp <span class="token operator">=</span> <span class="token keyword">static_cast</span><span class="token operator">&lt;</span><span class="token keyword">double</span><span class="token operator">></span><span class="token punctuation">(</span>speed <span class="token operator">/</span> <span class="token function">qPow</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">1.0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">qPow</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">30</span><span class="token punctuation">)</span> <span class="token operator">&lt;=</span> speed <span class="token operator">&amp;&amp;</span> speed <span class="token operator">&lt;</span> <span class="token function">qPow</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">40</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        unit <span class="token operator">=</span> SpeedInfo<span class="token operator">::</span>RateGb<span class="token punctuation">;</span>
+        sp <span class="token operator">=</span> <span class="token keyword">static_cast</span><span class="token operator">&lt;</span><span class="token keyword">double</span><span class="token operator">></span><span class="token punctuation">(</span>speed <span class="token operator">/</span> <span class="token function">qPow</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">30</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">1.0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">qPow</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">40</span><span class="token punctuation">)</span> <span class="token operator">&lt;=</span> speed <span class="token operator">&amp;&amp;</span> speed <span class="token operator">&lt;</span> <span class="token function">qPow</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">50</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        unit <span class="token operator">=</span> SpeedInfo<span class="token operator">::</span>RateTb<span class="token punctuation">;</span>
+        sp <span class="token operator">=</span> <span class="token keyword">static_cast</span><span class="token operator">&lt;</span><span class="token keyword">double</span><span class="token operator">></span><span class="token punctuation">(</span>speed <span class="token operator">/</span> <span class="token function">qPow</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">40</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">1.0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+        unit <span class="token operator">=</span> SpeedInfo<span class="token operator">::</span>RateUnknow<span class="token punctuation">;</span>
+        <span class="token function">qDebug</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">&lt;&lt;</span><span class="token string">"本设备网络速率单位传输超过 TB, 或者低于 0 Byte."</span><span class="token punctuation">;</span>
+        sp <span class="token operator">=</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">return</span> sp<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<br>
+
+<h3 id="获取CPU"><a href="#获取CPU" class="headerlink" title="获取CPU"></a>获取CPU</h3><h4 id="读取文件-1"><a href="#读取文件-1" class="headerlink" title="读取文件"></a>读取文件</h4><p><code>CPU</code> 相关的数据，从 <code>/proc/stat</code>  文件获取：读取此文件进行计算即可</p>
+<img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20201202110836.png" width="100%"/ loading="lazy">
+
+<p><strong>这个文件上面每一列表的详细含义如下:</strong></p>
+<ol>
+<li><code>user:</code> 用户态时间（一般/高优先级，仅统计nice&lt;=0）</li>
+<li><code>nice:</code> 用户态时间（低优先级，nice&gt;0）</li>
+<li><code>system:</code>  内核态时间</li>
+<li><code>idle:</code> 空闲时间（ 不包含IO等待时间） </li>
+<li><code>iowait:</code>  I/O等待时间 （ 硬盘IO等待时间） </li>
+<li><code>irq:</code> 硬中断 </li>
+<li><code>softirq:</code>  软中断</li>
+<li><code>steal:</code>  被盗时间（虚拟化环境中运行其他操作系统上花费的时间（since Linux 2.6.11））</li>
+<li><code>guest:</code>  来宾时间（操作系统运行虚拟CPU花费的时间（since Linux 2.6.24））</li>
+<li><code>guest_nice:</code> nice 来宾时间（ 运行一个带nice值的guest花费的时间（since Linux 2.6.33））</li>
+</ol>
+<br>
+
+<p><strong>最后的几个数值含义：</strong></p>
+<ol>
+<li><code>intr：</code> 系统启动以来的所有interrupts的次数情况（有冗余信息）；这行给出中断的信息，第一个为自系统启动以来，发生的所有的中断的次数。然后每个数对应一个特定的中断自系统启动以来所发生的次数。</li>
+<li><code>ctxt:</code>  自系统启动以来CPU发生的上下文交换的次数</li>
+<li><code>btime：</code> 启动时长(单位:秒)，从Epoch(即1970零时)开始到系统启动所经过的时长，每次启动会改变。</li>
+<li><code>processes</code>：自系统启动以来所创建的任务的个数目。当短时间该值特别大，系统可能出现异常</li>
+<li><code>procs_running：</code> 当前运行队列的任务的数目</li>
+<li><code>procs_blocked：</code> 当前被阻塞的任务的数目</li>
+<li><code>softirq:</code>  此行显示所有CPU的softirq总数, 第一列是所有软件和每个软件的总数, 后面的列是特定softirq的总数</li>
+</ol>
+<p><strong>其单位为 <code>jiffies</code>；其中 <code>1 jiffies = 0.01s = 10ms</code></strong></p>
+<br>
+
+<h4 id="思路-2"><a href="#思路-2" class="headerlink" title="思路"></a>思路</h4><p>和我们相关暂时只关心第一行，每次读取，依旧<strong>是某一时刻状态</strong> ，CPU 总量 cpuAll 为第一行所有列之和，空闲量 cpuFree 为第一行的第 4 列。将 <code>（cpuAll - cpuFree） / cpuAll</code> 就是此时刻的 CPU 使用率。</p>
+<p>而 <code>(((cpuAll - old_cpuAll) - (cpuFree - old_cpuFree)) * 100.0 / (cpuAll - old_cpuAll)</code> 则是CPU 在<strong>某一单位时间段</strong> 的 CPU 使用率。</p>
+<br>
+
+<h4 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h4><p>获取某一时刻 CPU 的总量和空闲量</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token comment">/*!
+ * \brief SpeedInfo::cpuRate 获取某一次 CPU 的使用情况
+ * \param[out] cpuAll 总 cpu 使用量
+ * \param[out] cpuFree 空闲 cpu 的使用量
+ */</span>
+<span class="token keyword">void</span> <span class="token class-name">SpeedInfo</span><span class="token operator">::</span><span class="token function">cpuRate</span><span class="token punctuation">(</span><span class="token keyword">long</span> <span class="token operator">&amp;</span>cpuAll<span class="token punctuation">,</span> <span class="token keyword">long</span> <span class="token operator">&amp;</span>cpuFree<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    cpuAll <span class="token operator">=</span> cpuFree <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token keyword">bool</span> ok <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    QFile <span class="token function">file</span><span class="token punctuation">(</span>PROC_PATH_CPU<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>file<span class="token punctuation">.</span><span class="token function">open</span><span class="token punctuation">(</span>QIODevice<span class="token operator">::</span>ReadOnly <span class="token operator">|</span> QIODevice<span class="token operator">::</span>Text<span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span><span class="token punctuation">;</span>
+
+    QTextStream <span class="token function">stream</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>file<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    QString line <span class="token operator">=</span> stream<span class="token punctuation">.</span><span class="token function">readLine</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>line<span class="token punctuation">.</span><span class="token function">isNull</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        QStringList list <span class="token operator">=</span> line<span class="token punctuation">.</span><span class="token function">split</span><span class="token punctuation">(</span><span class="token function">QRegExp</span><span class="token punctuation">(</span><span class="token string">"\\s&#123;1,&#125;"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">auto</span> v <span class="token operator">=</span> list<span class="token punctuation">.</span><span class="token function">begin</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">;</span> v <span class="token operator">!=</span> list<span class="token punctuation">.</span><span class="token function">end</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token operator">++</span>v<span class="token punctuation">)</span>
+            cpuAll <span class="token operator">+=</span> <span class="token punctuation">(</span><span class="token operator">*</span>v<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toLong</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>ok<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        cpuFree <span class="token operator">=</span> list<span class="token punctuation">.</span><span class="token function">at</span><span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toLong</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>ok<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    file<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<br>
+
+<h3 id="获取内存"><a href="#获取内存" class="headerlink" title="获取内存"></a>获取内存</h3><h4 id="读取文件-2"><a href="#读取文件-2" class="headerlink" title="读取文件"></a>读取文件</h4><p><code>Memory</code> 相关的数据，从 <code>/proc/meminfo</code>  文件获取：读取此文件进行计算即可</p>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20201202132456.png" width="40%"/ loading="lazy"> 
+
+
+
+<p>此文件的详细解释：</p>
+<ol>
+<li><p><code>MemTotal:</code> 所有内存(RAM)大小,减去一些预留空间和内核的大小。</p>
+</li>
+<li><p><code>MemFree:</code> 完全没有用到的物理内存，lowFree+highFree</p>
+</li>
+<li><p><code>MemAvailable:</code> 在不使用交换空间的情况下，启动一个新的应用最大可用内存的大小，计算方式：MemFree+Active(file)+Inactive(file)-(watermark+min(watermark,Active(file)+Inactive(file)/2))</p>
+</li>
+<li><p><code>Buffers:</code> 块设备所占用的缓存页，包括：直接读写块设备以及文件系统元数据(metadata)，比如superblock使用的缓存页。</p>
+</li>
+<li><p><code>Cached:</code> 表示普通文件数据所占用的缓存页。</p>
+</li>
+<li><p><code>SwapCached:</code> swap cache中包含的是被确定要swapping换页，但是尚未写入物理交换区的匿名内存页。那些匿名内存页，比如用户进程malloc申请的内存页是没有关联任何文件的，如果发生swapping换页，这类内存会被写入到交换区。</p>
+</li>
+<li><p><code>Active:</code> active包含active anon和active file</p>
+</li>
+<li><p><code>Inactive:</code> inactive包含inactive anon和inactive file</p>
+</li>
+<li><p><code>Active(anon):</code> anonymous pages（匿名页），用户进程的内存页分为两种：与文件关联的内存页(比如程序文件,数据文件对应的内存页)和与内存无关的内存页（比如进程的堆栈，用malloc申请的内存），前者称为file pages或mapped pages,后者称为匿名页。</p>
+</li>
+<li><p><code>Inactive(anon):</code> 见上</p>
+</li>
+<li><p><code>Active(file):</code> 见上</p>
+</li>
+<li><p><code>Inactive(file):</code> 见上</p>
+</li>
+<li><p><code>SwapTotal:</code> 可用的swap空间的总的大小(swap分区在物理内存不够的情况下，把硬盘空间的一部分释放出来，以供当前程序使用)</p>
+</li>
+<li><p><code>SwapFree:</code> 当前剩余的swap的大小</p>
+</li>
+<li><p><code>Dirty:</code> 需要写入磁盘的内存去的大小<code>Writeback:</code> 正在被写回的内存区的大小<code>AnonPages:</code> 未映射页的内存的大小<code>Mapped:</code> 设备和文件等映射的大小</p>
+</li>
+<li><p><code>Slab:</code> 内核数据结构slab的大小</p>
+</li>
+<li><p><code>SReclaimable:</code> 可回收的slab的大小</p>
+</li>
+<li><p><code>SUnreclaim:</code> 不可回收的slab的大小</p>
+</li>
+<li><p><code>PageTables:</code> 管理内存页页面的大小</p>
+</li>
+<li><p><code>NFS_Unstable:</code> 不稳定页表的大小</p>
+</li>
+<li><p><code>VmallocTotal:</code> Vmalloc内存区的大小</p>
+</li>
+<li><p><code>VmallocUsed:</code> 已用Vmalloc内存区的大小</p>
+</li>
+<li><p><code>VmallocChunk:</code> vmalloc区可用的连续最大快的大小</p>
+</li>
+</ol>
+<h4 id="思路-3"><a href="#思路-3" class="headerlink" title="思路"></a>思路</h4><p>此为某一时刻系统的内存和交换空间使用情况的截图；</p>
+<p><strong>对于内存：</strong> 内存总量 memoryAll 为 MemTotal 的数值，空闲内存 memoryFree 为 MemAvailable 的数值，使用中的内存为 memoryUse 为 （MemTotal - MemAvailable）；</p>
+<p><strong>对于交换空间：</strong> 交换空间总量 swapAll 为 SwapTotal 数值，空闲交换空间 swapFree 为 SwapFree 数值，使用中的交换控件量为 swapUse 为 （SwapTotal -  SwapFree） 数值；</p>
+<h4 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h4><p>获取某一时刻内存核交换空间的使用情况，但是这里所有单位都是 字节；</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token comment">/*!
+ * \brief SpeedInfo::memoryRate 获取 “内存” 和 “交换空间” 的某一时刻的使用情况
+ * \param memory 内存使用量
+ * \param memoryAll 内存总量
+ * \param swap 交换空间使用量
+ * \param swapAll 交换空间总量
+ */</span>
+<span class="token keyword">void</span> <span class="token class-name">SpeedInfo</span><span class="token operator">::</span><span class="token function">memoryRate</span><span class="token punctuation">(</span><span class="token keyword">long</span> <span class="token operator">&amp;</span>memory<span class="token punctuation">,</span> <span class="token keyword">long</span> <span class="token operator">&amp;</span>memoryAll<span class="token punctuation">,</span> <span class="token keyword">long</span> <span class="token operator">&amp;</span>swap<span class="token punctuation">,</span> <span class="token keyword">long</span> <span class="token operator">&amp;</span>swapAll<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    memory <span class="token operator">=</span> memoryAll <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    swap <span class="token operator">=</span> swapAll <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token keyword">bool</span> ok <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    QFile <span class="token function">file</span><span class="token punctuation">(</span>PROC_PATH_MEM<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>file<span class="token punctuation">.</span><span class="token function">open</span><span class="token punctuation">(</span>QIODevice<span class="token operator">::</span>ReadOnly <span class="token operator">|</span> QIODevice<span class="token operator">::</span>Text<span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span><span class="token punctuation">;</span>
+
+    QTextStream <span class="token function">stream</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>file<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">long</span> buff<span class="token punctuation">[</span><span class="token number">16</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">&#123;</span><span class="token number">0</span><span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;=</span> <span class="token number">15</span><span class="token punctuation">;</span> <span class="token operator">++</span>i<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        QString line <span class="token operator">=</span> stream<span class="token punctuation">.</span><span class="token function">readLine</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        QStringList list <span class="token operator">=</span> line<span class="token punctuation">.</span><span class="token function">split</span><span class="token punctuation">(</span><span class="token function">QRegExp</span><span class="token punctuation">(</span><span class="token string">"\\s&#123;1,&#125;"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buff<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> list<span class="token punctuation">.</span><span class="token function">at</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toLong</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>ok<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token punctuation">&#125;</span>
+
+    memoryAll <span class="token operator">=</span> buff<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+    memory <span class="token operator">=</span> buff<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span> <span class="token operator">-</span> buff<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+    swapAll <span class="token operator">=</span> buff<span class="token punctuation">[</span><span class="token number">14</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+    swap <span class="token operator">=</span> buff<span class="token punctuation">[</span><span class="token number">14</span><span class="token punctuation">]</span> <span class="token operator">-</span> buff<span class="token punctuation">[</span><span class="token number">15</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+
+    file<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<br>
+
+<h3 id="获取系统运行时间"><a href="#获取系统运行时间" class="headerlink" title="获取系统运行时间"></a>获取系统运行时间</h3><h4 id="读取文件-3"><a href="#读取文件-3" class="headerlink" title="读取文件"></a>读取文件</h4><p>想在预览里面显示系统开机到现在的运行时间。读取文件为 <code>/proc/uptime</code> ，</p>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20201202140839.png" width="40%"/ loading="lazy"> 
+
+<p>文件一共的两列表含义为：</p>
+<ol>
+<li>系统启动到现在的时间（以秒为单位）</li>
+<li>系统空闲的时间（以秒为单位）</li>
+</ol>
+<h4 id="思路-4"><a href="#思路-4" class="headerlink" title="思路"></a>思路</h4><p>将第一个参数获取获取，然后将这个数值转换为  <strong>“ x 天， hh:MM:ss”</strong>  的格式，这是我想显示的格式。</p>
+<h4 id="代码-3"><a href="#代码-3" class="headerlink" title="代码"></a>代码</h4><p>获取系统开始到现在的运行时间，单位为 秒；</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">void</span> <span class="token class-name">SpeedInfo</span><span class="token operator">::</span><span class="token function">uptime</span><span class="token punctuation">(</span><span class="token keyword">double</span> <span class="token operator">&amp;</span>run<span class="token punctuation">,</span> <span class="token keyword">double</span> <span class="token operator">&amp;</span>idle<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    run <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    idle <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+
+    QFile <span class="token function">file</span><span class="token punctuation">(</span>PROC_PATH_UPTIME<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>file<span class="token punctuation">.</span><span class="token function">open</span><span class="token punctuation">(</span>QIODevice<span class="token operator">::</span>ReadOnly <span class="token operator">|</span> QIODevice<span class="token operator">::</span>Text<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">qDebug</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">&lt;&lt;</span><span class="token string">"\"/proc/uptime\" don't open!"</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    QTextStream <span class="token function">stream</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>file<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    QString line <span class="token operator">=</span> stream<span class="token punctuation">.</span><span class="token function">readLine</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    QStringList list <span class="token operator">=</span> line<span class="token punctuation">.</span><span class="token function">split</span><span class="token punctuation">(</span><span class="token function">QRegExp</span><span class="token punctuation">(</span><span class="token string">"\\s&#123;1,&#125;"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>list<span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        run <span class="token operator">=</span> list<span class="token punctuation">.</span><span class="token function">at</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toDouble</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        idle <span class="token operator">=</span> list<span class="token punctuation">.</span><span class="token function">at</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toDouble</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    file<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+
+<p>这里本以为个很容易有现成的 <code>QDateTime</code> 之类的，直接将 秒 转换为想要的时间格式，试了一圈，发现没有，有一个很接近，但是以 1970 零时为开始的，也不符合预期。娜娜的无奈，还是自己动手写吧～</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp">QString <span class="token class-name">SpeedInfo</span><span class="token operator">::</span><span class="token function">autoTimeUnits</span><span class="token punctuation">(</span><span class="token keyword">double</span> s<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">int</span> time <span class="token operator">=</span> <span class="token function">qFloor</span><span class="token punctuation">(</span>s<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">int</span> ss <span class="token operator">=</span> time <span class="token operator">%</span> <span class="token number">60</span><span class="token punctuation">;</span>
+    <span class="token keyword">int</span> MM <span class="token operator">=</span> <span class="token punctuation">(</span>time <span class="token operator">%</span> <span class="token number">3600</span><span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token number">60</span><span class="token punctuation">;</span>
+    <span class="token keyword">int</span> hh <span class="token operator">=</span> <span class="token punctuation">(</span>time <span class="token operator">%</span> <span class="token number">86400</span><span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token number">3600</span><span class="token punctuation">;</span>
+    <span class="token keyword">int</span> dd <span class="token operator">=</span> time <span class="token operator">/</span> <span class="token number">86400</span><span class="token punctuation">;</span>
+
+    QString runTime <span class="token operator">=</span> <span class="token function">QString</span><span class="token punctuation">(</span><span class="token function">tr</span><span class="token punctuation">(</span><span class="token string">"系统已运行: %1天, %2:%3:%4"</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+            <span class="token punctuation">.</span><span class="token function">arg</span><span class="token punctuation">(</span>dd<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token string">'f'</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token function">QLatin1Char</span><span class="token punctuation">(</span><span class="token string">' '</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+            <span class="token punctuation">.</span><span class="token function">arg</span><span class="token punctuation">(</span>hh<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">'f'</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token function">QLatin1Char</span><span class="token punctuation">(</span><span class="token string">'0'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+            <span class="token punctuation">.</span><span class="token function">arg</span><span class="token punctuation">(</span>MM<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">'f'</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token function">QLatin1Char</span><span class="token punctuation">(</span><span class="token string">'0'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+            <span class="token punctuation">.</span><span class="token function">arg</span><span class="token punctuation">(</span>ss<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">'f'</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token function">QLatin1Char</span><span class="token punctuation">(</span><span class="token string">'0'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">return</span> runTime<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<br>
+
+<h2 id="任务栏-1-2-2-的缺陷"><a href="#任务栏-1-2-2-的缺陷" class="headerlink" title="任务栏 1.2.2 的缺陷"></a>任务栏 <code>1.2.2</code> 的缺陷</h2><p>开发过程中，又遇到一些如下 dde-dock 的一些 bug：</p>
+<ol>
+<li><p><strong>插件真实大小只有 图标范围</strong></p>
+<p>这里指的是，无论插件在 dock 布局上，显示有多大，但实际大小都只有如下中间的一个图标大小，右键非红色区域没有响应；</p>
+<img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20201204195032.png" width="30%"/ loading="lazy"></li>
+<li><p><strong>叫非 <code>datetime</code> 的插件显示都会被压缩</strong></p>
+<p>如果返回的插件名称为非 <code>datetime</code>， 且任务栏高度过低的时候，会出现内容上下被遮盖，显示不全。原因分析参见 <a target="_blank" rel="noopener" href="https://github.com/linuxdeepin/dde-dock/issues/321">#321</a> （基于 <code>1.2.2</code>）；另外在 <a target="_blank" rel="noopener" href="https://github.com/linuxdeepin/dde-dock/commit/9188fff15bdac20edbd14290bb1e44c1bcef28b5">9188fff1</a> 已经修复（基于 <code>1.2.3</code> ）。补丁暂只提交到 uos 分支，当前开发分支暂时未升级。</p>
+</li>
+<li><p><strong>修改布局不会自动刷新</strong></p>
+<p>当我调整的插件布局时候，好像不会<strong>立刻</strong> 通知到 dock 重新布局，也没有信号重新通知任务栏。也有可能室友，但是我没有找到？？？或如果有更好的解决方案，可以分享一波？？？临时的解决方案是，①将布局大小写死 ②手动刷新（卸载此插件后立刻重新加载此插件）。</p>
+</li>
+</ol>
+<br>
+
+<h2 id="更新-2020-12-28"><a href="#更新-2020-12-28" class="headerlink" title="更新 2020-12-28"></a>更新 2020-12-28</h2><p><a target="_blank" rel="noopener" href="https://github.com/xmuli/lfxSpeed">此项目 </a>不再维护；但基于其思路和新的实现目标，源码将会重新设计实现，一个功能更加强大的网速插件，也会提供对应的库便于其它开发者二次开发，新的项目在 <a target="_blank" rel="noopener" href="https://github.com/xmuli/lfxNet">lfxNet</a>  ，芜湖～ </p>
+<br>
+
+<h2 id="下载地址："><a href="#下载地址：" class="headerlink" title="下载地址："></a>下载地址：</h2><ul>
+<li>GitHub: <a target="_blank" rel="noopener" href="https://github.com/xmuli/lfxspeed">lfxspeed</a> </li>
+<li>Deepin Store 深度商店  |  Spark Store 星火商店</li>
+</ul>
+<br>
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考:"></a>参考:</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/linuxdeepin/dde-dock/blob/master/plugins/plugin-guide/plugins-developer-guide.md">plugins-developer-guide</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/deb0ed35c1c2">深度系统监视器原理剖析</a> </li>
+<li><a target="_blank" rel="noopener" href="http://gityuan.com/2017/08/12/proc_stat/">/proc/stat解析</a></li>
+<li><a target="_blank" rel="noopener" href="http://smilejay.com/2012/05/proc_uptime/">/PROC/UPTIME详解</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/liushui-sky/p/9236007.html">Linux平台Cpu使用率的计算</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/sonichy/CMDU_DDE_DOCK">CMDU_DDE_DOCK</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/v-svg/dde-dock-netspeed">dde-dock-netspeed</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/zhongyang219/TrafficMonitor">TrafficMonitor</a></li>
+<li><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/3521678/what-are-meanings-of-fields-in-proc-net-dev">What are meanings of fields in /proc/net/dev?</a> </li>
+</ul>
+</div><div id="reward-container"><span class="hty-icon-button button-glow" id="reward-button" title="打赏" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === &quot;none&quot;) ? &quot;block&quot; : &quot;none&quot;;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-hand-coin-line"></use></svg></span><div id="reward-comment">若文章有所感所获，亦可请我共饮一杯肥宅冰阔落；</div><div id="qr" style="display:none;"><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png" alt="支付宝" title="支付宝"></a><div><span style="color:#00A3EE"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-alipay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png" alt="微信支付" title="微信支付"></a><div><span style="color:#2DC100"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-wechat-pay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png" alt="QQ 支付" title="QQ 支付"></a><div><span style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></span></div></div></div></div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>偕臧</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="https://ifmet.cn/posts/c225b552/" title="Deepin 开发任务栏网速插件 lfxSpeed">https://ifmet.cn/posts/c225b552/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"><a class="post-nav-prev" href="/posts/60b2fbd8/" rel="prev" title="Qv2ray 检测到 DDE 环境，提示弹窗：Deepin 设置代理错误"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-left-s-line"></use></svg><span class="post-nav-text">Qv2ray 检测到 DDE 环境，提示弹窗：Deepin 设置代理错误</span></a></div><div class="post-nav-item"><a class="post-nav-next" href="/posts/d7327716/" rel="next" title="Linux or Mac 安装 gitbook 3.2.3 失败解决方案"><span class="post-nav-text">Linux or Mac 安装 gitbook 3.2.3 失败解决方案</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div class="hty-card" id="comment"><div class="comment-tooltip text-center"><span></span><br></div><div id="valine-container"></div><script>Yun.utils.getScript("https://cdn.jsdelivr.net/npm/valine@latest/dist/Valine.min.js", () => {
+  const valineConfig = {"enable":true,"appId":"j1ERzyBCVwKtzx1t7EOv5ur8-MdYXbMMI","appKey":"EuraMPDEgt5G8iLWSNrkQ49n","placeholder":"不同的观点和想法相遇，促进彼此的成长，当然，这里也可以俏皮一下 (´・ω・`) ~~~ (填写邮箱可以收到回复)","avatar":"wavatar","pageSize":10,"visitor":true,"highlight":true,"recordIP":true,"enableQQ":true,"meta":["nick","mail","link"],"el":"#valine-container","lang":"zh-cn"}
+  valineConfig.path = "/posts/c225b552/"
+  new Valine(valineConfig)
+}, window.Valine);</script></div></main><footer class="sidebar-translate" id="footer"><div class="beian"><a rel="noopener" href="https://beian.miit.gov.cn/" target="_blank">鄂ICP备2021002780号</a></div><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> 偕臧</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.4.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.5.2</span></div><div class="live_time"><span>本博客已萌萌哒地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  setTimeout(blog_live_time, 1000);
+  const start = new Date('2019-06-09T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="goUp" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><a class="popup-trigger hty-icon-button icon-search" id="search" href="javascript:;" title="搜索"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-search-line"></use></svg></span></a><script>window.addEventListener("DOMContentLoaded", () => {
+  // Handle and trigger popup window
+  document.querySelector(".popup-trigger").addEventListener("click", () => {
+    document.querySelector(".popup").classList.add("show");
+    setTimeout(() => {
+      document.querySelector(".search-input").focus();
+    }, 100);
+  });
+
+  // Monitor main search box
+  const onPopupClose = () => {
+    document.querySelector(".popup").classList.remove("show");
+  };
+
+  document.querySelector(".popup-btn-close").addEventListener("click", () => {
+    onPopupClose();
+  });
+
+  window.addEventListener("keyup", event => {
+    if (event.key === "Escape") {
+      onPopupClose();
+    }
+  });
+});
+</script><script src="/js/search/local-search.js" defer></script><div class="popup search-popup"><div class="search-header"><span class="popup-btn-close close-icon hty-icon-button"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-close-line"></use></svg></span></div><div class="search-input-container"><input class="search-input" id="local-search-input" type="text" placeholder="搜索..." value=""></div><div id="local-search-result"></div></div><script>const date = new Date();
+const today = (date.getMonth() + 1) + "-" + date.getDate()
+const mourn_days = ["4-4"]
+if (mourn_days.includes(today)) {
+  document.documentElement.style.filter = "grayscale(1)";
+}</script></div></body></html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="偕臧"><meta name="copyright" content="偕臧"><meta name="generator" content="Hexo 5.4.0"><meta name="theme" content="hexo-theme-yun"><title>C++中的单例模式 | 偕臧</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.24/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_ed8vp4atwoj.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link id="light-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism.css" media="(prefers-color-scheme: light)"><link id="dark-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: dark)"><link rel="shortcut icon" type="image/svg+xml" href="/favicon.ico"><link rel="mask-icon" href="/favicon.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/js/utils.js" as="script"><link rel="preload" href="/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"hostname":"ifmet.cn","root":"/","title":"偕臧的小站","version":"1.5.2","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"local_search":{"path":"/search.xml"},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/utils.js"></script><script src="/js/hexo-theme-yun.js"></script><link rel="alternate" href="/atom.xml" title="偕臧" type="application/atom+xml"><link rel="preconnect" href="https://www.google-analytics.com" crossorigin><script async src="https://www.googletagmanager.com/gtag/js?id=UA-160972149-1"></script><script>if (CONFIG.hostname === location.hostname) {
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-160972149-1');
+}</script><meta name="description" content="简介：  介绍c++的23中设计模式之一，单例模式；这是我目前实际工作中，遇到第一个设计模式，让我采用一种设计模式来在项目中使用。在网上看了很篇博客之后，发觉这一篇非常的易懂（但是也是需要自己自己琢磨，慢慢品味的）。热心网友将自己学习过程的分享出来；此刻（实际是前一段使用使用时候）成了我的脚手架，非常感谢；在此转载此文，以后设计模式自己有了更深的体悟，也会整理成自己的个人原创一篇，帮助大家入门了解">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++中的单例模式">
+<meta property="og:url" content="https://ifmet.cn/posts/45c008a3/index.html">
+<meta property="og:site_name" content="偕臧">
+<meta property="og:description" content="简介：  介绍c++的23中设计模式之一，单例模式；这是我目前实际工作中，遇到第一个设计模式，让我采用一种设计模式来在项目中使用。在网上看了很篇博客之后，发觉这一篇非常的易懂（但是也是需要自己自己琢磨，慢慢品味的）。热心网友将自己学习过程的分享出来；此刻（实际是前一段使用使用时候）成了我的脚手架，非常感谢；在此转载此文，以后设计模式自己有了更深的体悟，也会整理成自己的个人原创一篇，帮助大家入门了解">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-10-05T12:30:34.000Z">
+<meta property="article:modified_time" content="2019-10-05T12:30:34.000Z">
+<meta property="article:author" content="偕臧">
+<meta property="article:tag" content="偕臧, xmuli, c++, Qt, 哲学">
+<meta name="twitter:card" content="summary"><script src="/js/ui/mode.js"></script></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="偕臧"><img width="96" loading="lazy" src="/xmuli.png" alt="偕臧"><span class="site-author-status" title="一片四叶幸运草">🍀</span></a><div class="site-author-name"><a href="/about/">偕臧</a></div><a class="site-name" href="/about/site.html">偕臧</a><sub class="site-subtitle"></sub><div class="site-desciption">看待世界始终保持着好奇</div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">245</span></a></div><div class="site-state-item"><a href="/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">25</span></a></div><div class="site-state-item"><a href="/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">29</span></a></div><a class="site-state-item hty-icon-button" href="https://ifmet.cn/about" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><div class="links-of-author"><a class="links-of-author-item hty-icon-button" rel="noopener" href="/atom.xml" title="RSS" target="_blank" style="color:orange"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-rss-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="http://sighttp.qq.com/authd?IDKEY=31f3ef7312b39e2c8dc822ae2f4c3b3118e1a6f31cc83373" title="QQ" target="_blank" style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://github.com/xmuli" title="GitHub" target="_blank" style="color:#181717"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-github-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="mailto:xmulitech@gmail.com" title="E-Mail" target="_blank" style="color:#8E71C1"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-mail-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://space.bilibili.com/106940738" title="哔哩哔哩动画" target="_blank" style="color:#FF8EB3"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-bilibili-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://twitter.com/xmulite" title="Twitter" target="_blank" style="color:#1da1f2"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-twitter-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://t.me/xmuli" title="Telegram" target="_blank" style="color:#0088CC"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-telegram-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://xmuli.blog.csdn.net" title="Travelling" target="_blank" style="color:var(--hty-text-color)"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-send-plane-2-line"></use></svg></a></div><hr style="margin:0.5rem 1rem"><div class="links"><a class="links-item hty-icon-button" href="/links/" title="友链直达" style="color:dodgerblue"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-women-line"></use></svg></a><a class="links-item hty-icon-button" href="/learn/" title="学习他人" style="color:Pink"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-heart-line"></use></svg></a></div><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8C%E6%AD%A5%E5%8D%9A%E6%96%87%EF%BC%9A"><span class="toc-number">1.</span> <span class="toc-text">同步博文：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E6%96%87%EF%BC%9A"><span class="toc-number">2.</span> <span class="toc-text">原文：</span></a></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="https://ifmet.cn/posts/45c008a3/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="偕臧"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="偕臧"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">C++中的单例模式<a class="post-edit-link" href="https://github.com/xmuli/xmuliMark/tree/master/source/_posts/C++中的单例模式.md" target="_blank" title="编辑" rel="noopener"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-edit-line"></use></svg></a></h1><div class="post-meta"><div class="post-time" style="display:block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2019-10-05 12:30:34" itemprop="dateCreated datePublished" datetime="2019-10-05T12:30:34+00:00">2019-10-05</time></div><span class="post-count"><span class="post-symbolcount"><span class="post-meta-item-icon" title="本文字数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-file-word-line"></use></svg></span> <span title="本文字数">2.4k</span><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读时长"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-timer-line"></use></svg></span> <span title="阅读时长">8m</span></span></span><span class="leancloud_visitors" id="/posts/45c008a3/" data-flag-title="C++中的单例模式"><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读次数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-eye-line"></use></svg> <span class="leancloud-visitors-count"></span></span></span><div class="post-classify"><span class="post-category"> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/categories/%E5%AD%A6%E4%B9%A0-C-C/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">学习 - C/C++</span></a></span> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/categories/%E5%AD%A6%E4%B9%A0-%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86%E3%80%81%E6%80%9D%E6%83%B3%E6%9E%B6%E6%9E%84/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">学习 - 底层原理、思想架构</span></a></span> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/categories/%E5%AD%A6%E4%B9%A0-%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">学习 - 设计模式</span></a></span></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><p><strong>简介：</strong>  介绍<code>c++</code>的<strong>23</strong>中设计模式之一，<font color=#D0087E size=4 face="幼圆"><strong>单例模式</strong></font>；这是我目前实际工作中，遇到第一个设计模式，让我采用一种设计模式来在项目中使用。在网上看了很篇博客之后，发觉这一篇非常的易懂（但是也是需要自己自己琢磨，慢慢品味的）。热心网友将自己学习过程的分享出来；此刻（实际是前一段使用使用时候）成了我的脚手架，非常感谢；在此转载此文，以后设计模式自己有了更深的体悟，也会整理成自己的个人原创一篇，帮助大家入门了解，目前经验稍有不足，日后再出续篇</p>
+<span id="more"></span>
+
+<p>[TOC]</p>
+<br>
+
+<blockquote>
+<p><font color=#D0087E size=4 face="STFangsong">本文初发于 <strong>“偕臧的小站”</strong>  <a href="https://ifmet.cn/">ifmet.cn</a>，同步转载于此。</font></p>
+</blockquote>
+<br>
+
+<h2 id="同步博文："><a href="#同步博文：" class="headerlink" title="同步博文："></a><font color=#D0087E  face="幼圆">同步博文：</font></h2><ul>
+<li><font color=#D0087E  size=4 face="幼圆"><strong>本篇的<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_33154343">csdn</a>/<a target="_blank" rel="noopener" href="https://touwoyimuli.github.io/">github.io</a>同步博文:</strong> </font> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_33154343/article/details/102151247"><strong>C++中的单例模式</strong></a></li>
+</ul>
+<br>
+
+<p>博客原文链接：<a target="_blank" rel="noopener" href="https://blog.csdn.net/Hackbuteer1/article/details/7460019">C++中的单例模式</a></p>
+<h2 id="原文："><a href="#原文：" class="headerlink" title="原文："></a>原文：</h2><p>单例模式也称为单件模式、单子模式，可能是使用最广泛的设计模式。<font color=#C62F2F  size=4 face="幼圆"><strong>其意图是保证一个类仅有一个实例，并提供一个访问它的全局访问点，该实例被所有程序模块共享。</strong></font>有很多地方需要这样的功能模块，如系统的日志输出，GUI应用必须是单鼠标，MODEM的联接需要一条且只需要一条电话线，操作系统只能有一个窗口管理器，一台PC连一个键盘。<br>       单例模式有许多种实现方法，在C++中，甚至可以直接用一个全局变量做到这一点，但这样的代码显的很不优雅。 使用全局对象能够保证方便地访问实例，但是不能保证只声明一个对象——也就是说除了一个全局实例外，仍然能创建相同类的本地实例。<br>《设计模式》一书中给出了一种很不错的实现，定义一个单例类，使用类的私有静态指针变量指向类的唯一实例，并用一个公有的静态方法获取该实例。<br>       单例模式通过类本身来管理其唯一实例，这种特性提供了解决问题的方法。唯一的实例是类的一个普通对象，但设计这个类时，让它只能创建一个实例并提供对此实例的全局访问。唯一实例类Singleton在静态成员函数中隐藏创建实例的操作。习惯上把这个成员函数叫做Instance()，它的返回值是唯一实例的指针。<br>定义如下：</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">class</span> <span class="token class-name">CSingleton</span>
+<span class="token punctuation">&#123;</span>
+<span class="token keyword">private</span><span class="token operator">:</span>
+	<span class="token function">CSingleton</span><span class="token punctuation">(</span><span class="token punctuation">)</span>   <span class="token comment">//构造函数是私有的</span>
+	<span class="token punctuation">&#123;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">static</span> CSingleton <span class="token operator">*</span>m_pInstance<span class="token punctuation">;</span>
+<span class="token keyword">public</span><span class="token operator">:</span>
+	<span class="token keyword">static</span> CSingleton <span class="token operator">*</span> <span class="token function">GetInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#123;</span>
+		<span class="token keyword">if</span><span class="token punctuation">(</span>m_pInstance <span class="token operator">==</span> <span class="token constant">NULL</span><span class="token punctuation">)</span>  <span class="token comment">//判断是否第一次调用</span>
+			m_pInstance <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token function">CSingleton</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">return</span> m_pInstance<span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>用户访问唯一实例的方法只有GetInstance()成员函数。如果不通过这个函数，任何创建实例的尝试都将失败，因为类的构造函数是私有的。GetInstance()使用<font color=#0000FF size=4 face="幼圆">懒惰初始化，也就是说它的返回值是当这个函数首次被访问时被创建的。**</font>这是一种防弹设计——所有GetInstance()之后的调用都返回相同实例的指针：</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp">CSingleton<span class="token operator">*</span> p1 <span class="token operator">=</span> <span class="token class-name">CSingleton</span> <span class="token operator">::</span> <span class="token function">GetInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+CSingleton<span class="token operator">*</span> p2 <span class="token operator">=</span> p1<span class="token operator">-></span><span class="token function">GetInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+CSingleton<span class="token operator">&amp;</span> ref <span class="token operator">=</span> <span class="token operator">*</span> <span class="token class-name">CSingleton</span> <span class="token operator">::</span> <span class="token function">GetInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+
+<p>对GetInstance稍加修改，这个设计模板便可以适用于可变多实例情况，如一个类允许最多五个实例。</p>
+<p><font color=#FF0000 size=4 face="幼圆">单例类<code>CSingleton</code>有以下特征：</font><br>它有一个<font color=#FF0000  size=4 face="幼圆">指向唯一实例的静态指针<code>m_pInstance</code>，并且是私有的；</font><br>它有一个公有的函数，可以获取这个唯一的实例，并且在需要的时候创建该实例；<br>它的构造函数是私有的，这样就不能从别处创建该类的实例。<br>大多数时候，这样的实现都不会出现问题。有经验的读者可能会问，m_pInstance指向的空间什么时候释放呢？更严重的问题是，该实例的析构函数什么时候执行？<br>如果在类的析构行为中有必须的操作，比如关闭文件，释放外部资源，那么上面的代码无法实现这个要求。我们需要一种方法，正常的删除该实例。<br>可以在程序结束时调用GetInstance()，并对返回的指针掉用delete操作。这样做可以实现功能，但不仅很丑陋，而且容易出错。因为这样的附加代码很容易被忘记，而且也很难保证在delete之后，没有代码再调用GetInstance函数。<br><font color=#FF0000  size=4 face="幼圆"><strong>一个妥善的方法是让这个类自己知道在合适的时候把自己删除，或者说把删除自己的操作挂在操作系统中的某个合适的点上，</strong></font>使其在恰当的时候被自动执行。<br>我们知道，程序在结束的时候，<font color=#0000FF size=4 face="幼圆">系统会自动析构所有的全局变量</font>。事实上，<font color=#0000FF size=4 face="幼圆">系统也会析构所有的类的静态成员变量，就像这些静态成员也是全局变量一样</font>。利用这个特征，我们可以在单例类中定义一个这样的<font color=#FF0000  size=4 face="幼圆">静态成员变量</font>，而它的<font color=#FF0000  size=4 face="幼圆">唯一工作</font>就是在析构函数中删除单例类的实例。如下面的代码中的CGarbo类（Garbo意为垃圾工人）：</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">class</span> <span class="token class-name">CSingleton</span>
+<span class="token punctuation">&#123;</span>
+<span class="token keyword">private</span><span class="token operator">:</span>
+	<span class="token function">CSingleton</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#123;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">static</span> CSingleton <span class="token operator">*</span>m_pInstance<span class="token punctuation">;</span>
+	<span class="token keyword">class</span> <span class="token class-name">CGarbo</span>   <span class="token comment">//它的唯一工作就是在析构函数中删除CSingleton的实例</span>
+	<span class="token punctuation">&#123;</span>
+	<span class="token keyword">public</span><span class="token operator">:</span>
+		<span class="token operator">~</span><span class="token function">CGarbo</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+		<span class="token punctuation">&#123;</span>
+			<span class="token keyword">if</span><span class="token punctuation">(</span>CSingleton<span class="token operator">::</span>m_pInstance<span class="token punctuation">)</span>
+				<span class="token keyword">delete</span> CSingleton<span class="token operator">::</span>m_pInstance<span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+	<span class="token keyword">static</span> CGarbo Garbo<span class="token punctuation">;</span>  <span class="token comment">//定义一个静态成员变量，程序结束时，系统会自动调用它的析构函数</span>
+<span class="token keyword">public</span><span class="token operator">:</span>
+	<span class="token keyword">static</span> CSingleton <span class="token operator">*</span> <span class="token function">GetInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#123;</span>
+		<span class="token keyword">if</span><span class="token punctuation">(</span>m_pInstance <span class="token operator">==</span> <span class="token constant">NULL</span><span class="token punctuation">)</span>  <span class="token comment">//判断是否第一次调用</span>
+			m_pInstance <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token function">CSingleton</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">return</span> m_pInstance<span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>类CGarbo被定义为CSingleton的<font color=#0000FF size=4 face="幼圆">私有内嵌类</font>，以防该类被在其他地方滥用。<br>程序运行结束时，系统会调用CSingleton的静态成员Garbo的析构函数，该析构函数会删除单例的唯一实例。<br>使用这种方法释放单例对象有以下特征：<br><font color=#0000FF size=4 face="幼圆">在单例类内部定义专有的嵌套类；</font><br><font color=#0000FF size=4 face="幼圆">在单例类内定义私有的专门用于释放的静态成员；</font><br><font color=#0000FF size=4 face="幼圆">利用程序在结束时析构全局变量的特性，选择最终的释放时机；</font><br><font color=#0000FF size=4 face="幼圆">使用单例的代码不需要任何操作，不必关心对象的释放。</font></p>
+<p><strong>进一步的讨论</strong><br>但是添加一个类的静态对象，总是让人不太满意，所以有人用如下方法来重新实现单例和解决它相应的问题，代码如下：</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">class</span> <span class="token class-name">CSingleton</span>
+<span class="token punctuation">&#123;</span>
+<span class="token keyword">private</span><span class="token operator">:</span>
+	<span class="token function">CSingleton</span><span class="token punctuation">(</span><span class="token punctuation">)</span>   <span class="token comment">//构造函数是私有的</span>
+	<span class="token punctuation">&#123;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token keyword">public</span><span class="token operator">:</span>
+	<span class="token keyword">static</span> CSingleton <span class="token operator">&amp;</span> <span class="token function">GetInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#123;</span>
+		<span class="token keyword">static</span> CSingleton instance<span class="token punctuation">;</span>   <span class="token comment">//局部静态变量</span>
+		<span class="token keyword">return</span> instance<span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>使用<font color=#0000FF size=4 face="幼圆"><strong>局部静态变量</strong></font>，非常强大的方法，完全实现了单例的特性，而且代码量更少，也不用担心单例销毁的问题。<br>但使用此种方法也会出现问题，当如下方法使用单例时问题来了，<br><code>Singleton singleton = Singleton :: GetInstance();</code><br>这么做就出现了一个<font color=#0000FF size=4 face="幼圆">类拷贝的问题</font>，这就违背了单例的特性。产生这个问题<font color=#0000FF size=4 face="幼圆">原因在于</font>：编译器会为类生成一个默认的构造函数，来支持类的拷贝。<br>最后没有办法，我们要禁止类拷贝和类赋值，禁止程序员用这种方式来使用单例，当时领导的意思是GetInstance()函数返回一个指针而不是返回一个引用，函数的代码改为如下：</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">class</span> <span class="token class-name">CSingleton</span>
+<span class="token punctuation">&#123;</span>
+<span class="token keyword">private</span><span class="token operator">:</span>
+	<span class="token function">CSingleton</span><span class="token punctuation">(</span><span class="token punctuation">)</span>   <span class="token comment">//构造函数是私有的</span>
+	<span class="token punctuation">&#123;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token keyword">public</span><span class="token operator">:</span>
+	<span class="token keyword">static</span> CSingleton <span class="token operator">*</span> <span class="token function">GetInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#123;</span>
+		<span class="token keyword">static</span> CSingleton instance<span class="token punctuation">;</span>   <span class="token comment">//局部静态变量</span>
+		<span class="token keyword">return</span> <span class="token operator">&amp;</span>instance<span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>但我总觉的不好，为什么不让编译器不这么干呢。这时我才想起可以显示的声明类拷贝的构造函数，和重载 = 操作符，新的单例类如下：</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">class</span> <span class="token class-name">CSingleton</span>
+<span class="token punctuation">&#123;</span>
+<span class="token keyword">private</span><span class="token operator">:</span>
+	<span class="token function">CSingleton</span><span class="token punctuation">(</span><span class="token punctuation">)</span>   <span class="token comment">//构造函数是私有的</span>
+	<span class="token punctuation">&#123;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token function">CSingleton</span><span class="token punctuation">(</span><span class="token keyword">const</span> CSingleton <span class="token operator">&amp;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	CSingleton <span class="token operator">&amp;</span> <span class="token keyword">operator</span> <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">const</span> CSingleton <span class="token operator">&amp;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">public</span><span class="token operator">:</span>
+	<span class="token keyword">static</span> CSingleton <span class="token operator">&amp;</span> <span class="token function">GetInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#123;</span>
+		<span class="token keyword">static</span> CSingleton instance<span class="token punctuation">;</span>   <span class="token comment">//局部静态变量</span>
+		<span class="token keyword">return</span> instance<span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>关于<code>Singleton(const Singleton);</code>和 <code>Singleton &amp; operate = (const Singleton&amp;);</code>函数，需要声明成私有的，并且只声明不实现。这样，如果用上面的方式来使用单例时，不管是在友元类中还是其他的，编译器都是报错。<br>不知道这样的单例类是否还会有问题，但在程序中这样子使用已经基本没有问题了。</p>
+<p>考虑到线程安全、异常安全，可以做以下扩展</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">class</span> <span class="token class-name">Lock</span>
+<span class="token punctuation">&#123;</span>
+<span class="token keyword">private</span><span class="token operator">:</span>       
+	CCriticalSection m_cs<span class="token punctuation">;</span>
+<span class="token keyword">public</span><span class="token operator">:</span>
+	<span class="token function">Lock</span><span class="token punctuation">(</span>CCriticalSection  cs<span class="token punctuation">)</span> <span class="token operator">:</span> <span class="token function">m_cs</span><span class="token punctuation">(</span>cs<span class="token punctuation">)</span>
+	<span class="token punctuation">&#123;</span>
+		m_cs<span class="token punctuation">.</span><span class="token function">Lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token operator">~</span><span class="token function">Lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#123;</span>
+		m_cs<span class="token punctuation">.</span><span class="token function">Unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+
+<span class="token keyword">class</span> <span class="token class-name">Singleton</span>
+<span class="token punctuation">&#123;</span>
+<span class="token keyword">private</span><span class="token operator">:</span>
+	<span class="token function">Singleton</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token function">Singleton</span><span class="token punctuation">(</span><span class="token keyword">const</span> Singleton <span class="token operator">&amp;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	Singleton<span class="token operator">&amp;</span> <span class="token keyword">operator</span> <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">const</span> Singleton <span class="token operator">&amp;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">public</span><span class="token operator">:</span>
+	<span class="token keyword">static</span> Singleton <span class="token operator">*</span><span class="token function">Instantialize</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">static</span> Singleton <span class="token operator">*</span>pInstance<span class="token punctuation">;</span>
+	<span class="token keyword">static</span> CCriticalSection cs<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+
+Singleton<span class="token operator">*</span> Singleton<span class="token operator">::</span>pInstance <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+
+Singleton<span class="token operator">*</span> <span class="token class-name">Singleton</span><span class="token operator">::</span><span class="token function">Instantialize</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+	<span class="token keyword">if</span><span class="token punctuation">(</span>pInstance <span class="token operator">==</span> <span class="token constant">NULL</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#123;</span>   <span class="token comment">//double check</span>
+		Lock <span class="token function">lock</span><span class="token punctuation">(</span>cs<span class="token punctuation">)</span><span class="token punctuation">;</span>           <span class="token comment">//用lock实现线程安全，用资源管理类，实现异常安全</span>
+		<span class="token comment">//使用资源管理类，在抛出异常的时候，资源管理类对象会被析构，析构总是发生的无论是因为异常抛出还是语句块结束。</span>
+		<span class="token keyword">if</span><span class="token punctuation">(</span>pInstance <span class="token operator">==</span> <span class="token constant">NULL</span><span class="token punctuation">)</span>
+		<span class="token punctuation">&#123;</span>
+			pInstance <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token function">Singleton</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">return</span> pInstance<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>之所以在Instantialize函数里面对pInstance 是否为空做了两次判断，因为该方法调用一次就产生了对象，pInstance == NULL 大部分情况下都为false，如果按照原来的方法，每次获取实例都需要加锁，效率太低。而改进的方法只需要在第一次 调用的时候加锁，可大大提高效率。</p>
+</div><div id="reward-container"><span class="hty-icon-button button-glow" id="reward-button" title="打赏" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === &quot;none&quot;) ? &quot;block&quot; : &quot;none&quot;;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-hand-coin-line"></use></svg></span><div id="reward-comment">若文章有所感所获，亦可请我共饮一杯肥宅冰阔落；</div><div id="qr" style="display:none;"><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png" alt="支付宝" title="支付宝"></a><div><span style="color:#00A3EE"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-alipay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png" alt="微信支付" title="微信支付"></a><div><span style="color:#2DC100"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-wechat-pay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png" alt="QQ 支付" title="QQ 支付"></a><div><span style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></span></div></div></div></div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>偕臧</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="https://ifmet.cn/posts/45c008a3/" title="C++中的单例模式">https://ifmet.cn/posts/45c008a3/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"><a class="post-nav-prev" href="/posts/618ad839/" rel="prev" title="根据给定(任意)的QString文本, 获取其矩形大小"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-left-s-line"></use></svg><span class="post-nav-text">根据给定(任意)的QString文本, 获取其矩形大小</span></a></div><div class="post-nav-item"><a class="post-nav-next" href="/posts/32d0bfe0/" rel="next" title="qt绘画扇形drawPie()和反三角函数qAcos()"><span class="post-nav-text">qt绘画扇形drawPie()和反三角函数qAcos()</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div class="hty-card" id="comment"><div class="comment-tooltip text-center"><span></span><br></div><div id="valine-container"></div><script>Yun.utils.getScript("https://cdn.jsdelivr.net/npm/valine@latest/dist/Valine.min.js", () => {
+  const valineConfig = {"enable":true,"appId":"j1ERzyBCVwKtzx1t7EOv5ur8-MdYXbMMI","appKey":"EuraMPDEgt5G8iLWSNrkQ49n","placeholder":"不同的观点和想法相遇，促进彼此的成长，当然，这里也可以俏皮一下 (´・ω・`) ~~~ (填写邮箱可以收到回复)","avatar":"wavatar","pageSize":10,"visitor":true,"highlight":true,"recordIP":true,"enableQQ":true,"meta":["nick","mail","link"],"el":"#valine-container","lang":"zh-cn"}
+  valineConfig.path = "/posts/45c008a3/"
+  new Valine(valineConfig)
+}, window.Valine);</script></div></main><footer class="sidebar-translate" id="footer"><div class="beian"><a rel="noopener" href="https://beian.miit.gov.cn/" target="_blank">鄂ICP备2021002780号</a></div><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> 偕臧</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.4.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.5.2</span></div><div class="live_time"><span>本博客已萌萌哒地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  setTimeout(blog_live_time, 1000);
+  const start = new Date('2019-06-09T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="goUp" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><a class="popup-trigger hty-icon-button icon-search" id="search" href="javascript:;" title="搜索"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-search-line"></use></svg></span></a><script>window.addEventListener("DOMContentLoaded", () => {
+  // Handle and trigger popup window
+  document.querySelector(".popup-trigger").addEventListener("click", () => {
+    document.querySelector(".popup").classList.add("show");
+    setTimeout(() => {
+      document.querySelector(".search-input").focus();
+    }, 100);
+  });
+
+  // Monitor main search box
+  const onPopupClose = () => {
+    document.querySelector(".popup").classList.remove("show");
+  };
+
+  document.querySelector(".popup-btn-close").addEventListener("click", () => {
+    onPopupClose();
+  });
+
+  window.addEventListener("keyup", event => {
+    if (event.key === "Escape") {
+      onPopupClose();
+    }
+  });
+});
+</script><script src="/js/search/local-search.js" defer></script><div class="popup search-popup"><div class="search-header"><span class="popup-btn-close close-icon hty-icon-button"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-close-line"></use></svg></span></div><div class="search-input-container"><input class="search-input" id="local-search-input" type="text" placeholder="搜索..." value=""></div><div id="local-search-result"></div></div><script>const date = new Date();
+const today = (date.getMonth() + 1) + "-" + date.getDate()
+const mourn_days = ["4-4"]
+if (mourn_days.includes(today)) {
+  document.documentElement.style.filter = "grayscale(1)";
+}</script></div></body></html>

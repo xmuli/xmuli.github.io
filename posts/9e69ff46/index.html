@@ -1,0 +1,298 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="偕臧"><meta name="copyright" content="偕臧"><meta name="generator" content="Hexo 5.4.0"><meta name="theme" content="hexo-theme-yun"><title>Linux中原子操作，死锁原因以及解决方法，读写锁的属性和函数使用pthread_rwlock_wrlock() | 偕臧</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.24/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_ed8vp4atwoj.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link id="light-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism.css" media="(prefers-color-scheme: light)"><link id="dark-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: dark)"><link rel="shortcut icon" type="image/svg+xml" href="/favicon.ico"><link rel="mask-icon" href="/favicon.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/js/utils.js" as="script"><link rel="preload" href="/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"hostname":"ifmet.cn","root":"/","title":"偕臧的小站","version":"1.5.2","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"local_search":{"path":"/search.xml"},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/utils.js"></script><script src="/js/hexo-theme-yun.js"></script><link rel="alternate" href="/atom.xml" title="偕臧" type="application/atom+xml"><link rel="preconnect" href="https://www.google-analytics.com" crossorigin><script async src="https://www.googletagmanager.com/gtag/js?id=UA-160972149-1"></script><script>if (CONFIG.hostname === location.hostname) {
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-160972149-1');
+}</script><meta name="description" content="简  述：　上一篇中介绍了多线程使用互斥量(锁)来控制程序的访问公共资源的时候是”串行“的；本篇继续，重点讲解如下几个概念：Linux 中的原子操作 、死锁原因 以及解决方法 、和读写锁 和对应的源码小例子。其中读写锁的使用例子，完全可以参考互斥量(锁)，其大概流程如下：  pthread_rwlock_init() pthread_rwlock_rdlock() &#x2F; pthread_rwlo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux中原子操作，死锁原因以及解决方法，读写锁的属性和函数使用pthread_rwlock_wrlock()">
+<meta property="og:url" content="https://ifmet.cn/posts/9e69ff46/index.html">
+<meta property="og:site_name" content="偕臧">
+<meta property="og:description" content="简  述：　上一篇中介绍了多线程使用互斥量(锁)来控制程序的访问公共资源的时候是”串行“的；本篇继续，重点讲解如下几个概念：Linux 中的原子操作 、死锁原因 以及解决方法 、和读写锁 和对应的源码小例子。其中读写锁的使用例子，完全可以参考互斥量(锁)，其大概流程如下：  pthread_rwlock_init() pthread_rwlock_rdlock() &#x2F; pthread_rwlo">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200426_231357.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200426_231648.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200426_231710.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200427_215101.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200427_214901.png">
+<meta property="article:published_time" content="2020-04-27T00:01:45.000Z">
+<meta property="article:modified_time" content="2020-04-27T00:01:45.000Z">
+<meta property="article:author" content="偕臧">
+<meta property="article:tag" content="偕臧, xmuli, c++, Qt, 哲学">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200426_231357.png"><script src="/js/ui/mode.js"></script></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="偕臧"><img width="96" loading="lazy" src="/xmuli.png" alt="偕臧"><span class="site-author-status" title="一片四叶幸运草">🍀</span></a><div class="site-author-name"><a href="/about/">偕臧</a></div><a class="site-name" href="/about/site.html">偕臧</a><sub class="site-subtitle"></sub><div class="site-desciption">看待世界始终保持着好奇</div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">245</span></a></div><div class="site-state-item"><a href="/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">25</span></a></div><div class="site-state-item"><a href="/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">29</span></a></div><a class="site-state-item hty-icon-button" href="https://ifmet.cn/about" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><div class="links-of-author"><a class="links-of-author-item hty-icon-button" rel="noopener" href="/atom.xml" title="RSS" target="_blank" style="color:orange"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-rss-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="http://sighttp.qq.com/authd?IDKEY=31f3ef7312b39e2c8dc822ae2f4c3b3118e1a6f31cc83373" title="QQ" target="_blank" style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://github.com/xmuli" title="GitHub" target="_blank" style="color:#181717"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-github-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="mailto:xmulitech@gmail.com" title="E-Mail" target="_blank" style="color:#8E71C1"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-mail-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://space.bilibili.com/106940738" title="哔哩哔哩动画" target="_blank" style="color:#FF8EB3"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-bilibili-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://twitter.com/xmulite" title="Twitter" target="_blank" style="color:#1da1f2"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-twitter-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://t.me/xmuli" title="Telegram" target="_blank" style="color:#0088CC"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-telegram-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://xmuli.blog.csdn.net" title="Travelling" target="_blank" style="color:var(--hty-text-color)"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-send-plane-2-line"></use></svg></a></div><hr style="margin:0.5rem 1rem"><div class="links"><a class="links-item hty-icon-button" href="/links/" title="友链直达" style="color:dodgerblue"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-women-line"></use></svg></a><a class="links-item hty-icon-button" href="/learn/" title="学习他人" style="color:Pink"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-heart-line"></use></svg></a></div><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%96%E7%A8%8B%E7%8E%AF%E5%A2%83%EF%BC%9A"><span class="toc-number">1.</span> <span class="toc-text">编程环境：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C%EF%BC%9A"><span class="toc-number">2.</span> <span class="toc-text">原子操作：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%A0%E6%88%90%E6%AD%BB%E9%94%81%E7%9A%84%E5%8E%9F%E5%9B%A0%EF%BC%9A"><span class="toc-number">3.</span> <span class="toc-text">造成死锁的原因：</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%87%AA%E5%B7%B1%E9%94%81%E8%87%AA%E5%B7%B1%EF%BC%9A"><span class="toc-number">3.1.</span> <span class="toc-text">自己锁自己：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%BE%AA%E7%8E%AF%E9%94%81%E4%BD%8F%EF%BC%9A"><span class="toc-number">3.2.</span> <span class="toc-text">循环锁住：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%81%BF%E5%85%8D%E6%AD%BB%E9%94%81%E7%9A%84%E6%96%B9%E5%BC%8F%EF%BC%9A"><span class="toc-number">4.</span> <span class="toc-text">避免死锁的方式：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%BB%E5%86%99%E9%94%81%EF%BC%9A"><span class="toc-number">5.</span> <span class="toc-text">读写锁：</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%BB%E5%86%99%E9%94%81%E7%9A%84%E7%90%86%E8%A7%A3%EF%BC%9A"><span class="toc-number">5.1.</span> <span class="toc-text">读写锁的理解：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%BB%E5%86%99%E9%94%81%E7%9A%84%E7%89%B9%E6%80%A7%EF%BC%9A"><span class="toc-number">5.2.</span> <span class="toc-text">读写锁的特性：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%BB%E5%86%99%E9%94%81%E7%9A%84%E5%9C%BA%E6%99%AF%E7%BB%83%E4%B9%A0%EF%BC%9A"><span class="toc-number">6.</span> <span class="toc-text">读写锁的场景练习：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%BB%E5%86%99%E9%94%81%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF%EF%BC%9A"><span class="toc-number">7.</span> <span class="toc-text">读写锁的使用场景：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%BB%E5%86%99%E9%94%81%E7%9A%84%E4%B8%BB%E8%A6%81%E6%93%8D%E4%BD%9C%E5%87%BD%E6%95%B0%EF%BC%9A"><span class="toc-number">8.</span> <span class="toc-text">读写锁的主要操作函数：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%99%E4%B8%80%E4%B8%AA%E8%BF%90%E7%94%A8%E8%AF%BB%E5%86%99%E9%94%81%E7%9A%84%E4%BE%8B%E5%AD%90%EF%BC%9A"><span class="toc-number">9.</span> <span class="toc-text">写一个运用读写锁的例子：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80%EF%BC%9A"><span class="toc-number">10.</span> <span class="toc-text">下载地址：</span></a></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="https://ifmet.cn/posts/9e69ff46/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="偕臧"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="偕臧"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Linux中原子操作，死锁原因以及解决方法，读写锁的属性和函数使用pthread_rwlock_wrlock()<a class="post-edit-link" href="https://github.com/xmuli/xmuliMark/tree/master/source/_posts/Linux中原子操作，死锁原因以及解决方法，读写锁的属性和函数使用pthread_rwlock_wrlock().md" target="_blank" title="编辑" rel="noopener"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-edit-line"></use></svg></a></h1><div class="post-meta"><div class="post-time" style="display:block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2020-04-27 00:01:45" itemprop="dateCreated datePublished" datetime="2020-04-27T00:01:45+00:00">2020-04-27</time></div><span class="post-count"><span class="post-symbolcount"><span class="post-meta-item-icon" title="本文字数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-file-word-line"></use></svg></span> <span title="本文字数">1.5k</span><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读时长"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-timer-line"></use></svg></span> <span title="阅读时长">5m</span></span></span><span class="leancloud_visitors" id="/posts/9e69ff46/" data-flag-title="Linux中原子操作，死锁原因以及解决方法，读写锁的属性和函数使用pthread_rwlock_wrlock()"><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读次数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-eye-line"></use></svg> <span class="leancloud-visitors-count"></span></span></span><div class="post-classify"><span class="post-category"> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/categories/%E5%AD%A6%E4%B9%A0-Linux/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">学习 - Linux</span></a></span></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><p>　　<strong>简  述：</strong>　上一篇中介绍了多线程使用互斥量(锁)来控制程序的访问公共资源的时候是”串行“的；本篇继续，重点讲解如下几个概念：Linux 中的<strong>原子操作</strong> 、<strong>死锁原因</strong> 以<strong>及解决方法</strong> 、和<strong>读写锁</strong> 和对应的源码小例子。其中读写锁的使用例子，完全可以参考互斥量(锁)，其大概流程如下：</p>
+<ul>
+<li><code>pthread_rwlock_init()</code></li>
+<li><code>pthread_rwlock_rdlock()</code> / <code>pthread_rwlock_tryrdlock()</code> / <code>pthread_rwlock_wrlock()</code> / <code>pthread_rwlock_trywrlock()</code></li>
+<li>、、、代码片</li>
+<li><code>pthread_rwlock_unlock()</code></li>
+<li><code>pthread_rwlock_destroy()</code></li>
+</ul>
+<span id="more"></span>
+
+<p>[TOC]</p>
+<br>
+
+<blockquote>
+<p><font color=#D0087E size=4 face="STFangsong">本文初发于 <strong>“偕臧的小站”</strong>  <a href="https://ifmet.cn/">ifmet.cn</a>，同步转载于此。</font></p>
+</blockquote>
+<br>
+
+<h3 id="编程环境："><a href="#编程环境：" class="headerlink" title="编程环境："></a>编程环境：</h3><p>　　<strong>💻：</strong>  <code>uos20</code> 📎 <code>gcc/g++ 8.3</code> 📎 <code>gdb8.0</code> </p>
+<p>　　<strong>💻：</strong>  <code>MacOS 10.14 </code> 📎 <code>gcc/g++ 9.2</code> 📎 <code>gdb8.3</code> </p>
+<br>
+
+<h3 id="原子操作："><a href="#原子操作：" class="headerlink" title="原子操作："></a>原子操作：</h3><ul>
+<li><p><strong>原子操作：</strong></p>
+<ul>
+<li><strong>cpu 处理一个指令，线程 / 进程在处理完这个指令之前，是不会失去 cpu 的。</strong></li>
+</ul>
+</li>
+</ul>
+<p>借用显示生活中的知识，原子⚛是最小的不可分割的物质，没有比它更小的（类比，不详探究夸克）；在一个程序中，是有几百行代码构成了，可以将一行代码（一行表达式语句）看做为一个 <strong>”原子操作“</strong>；</p>
+<p>比如：</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">int</span> a <span class="token operator">=</span> b <span class="token operator">+</span> <span class="token number">100</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<br>
+
+<ul>
+<li><p><strong>临界区：</strong></p>
+<ul>
+<li>从代码的角度理解，就是 执行加锁语句 <code>pthread_mutex_lock()</code> 和解锁语句 <code>pthread_mutex_unlock()</code> 之间代码片，称之为 <strong>临界区</strong>； 也可以看作为 ”伪原子操作“ ，因为它有可能临界区的代码执行到一半，cpu 就被抢走了，但是其虽然抢到了 cpu 但是会阻塞，或者不能够访问该临界区的代码片，然后等待轮转，cpu 再次回来，继续在自己身上继续执行接下来的代码行；然后这样临界区的代码就只有它执行完毕了。可以看做是一个 ”伪“ 原子操作。</li>
+</ul>
+<p> <strong>示意图如下：</strong></p>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200426_231357.png" width="50%"/ loading="lazy"></li>
+</ul>
+<br>
+
+<h3 id="造成死锁的原因："><a href="#造成死锁的原因：" class="headerlink" title="造成死锁的原因："></a>造成死锁的原因：</h3><h4 id="自己锁自己："><a href="#自己锁自己：" class="headerlink" title="自己锁自己："></a>自己锁自己：</h4><ul>
+<li><strong>分析：</strong> 当遇到连续锁两次的时候，线程会阻塞在 第二个 <code>pthread_mutex_lock()</code> 函数这一行里面。</li>
+</ul>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200426_231648.png" width="70%"/ loading="lazy">
+
+<br>
+
+<h4 id="循环锁住："><a href="#循环锁住：" class="headerlink" title="循环锁住："></a>循环锁住：</h4> <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200426_231710.png" width="70%"/ loading="lazy">
+
+<br>
+
+<h3 id="避免死锁的方式："><a href="#避免死锁的方式：" class="headerlink" title="避免死锁的方式："></a>避免死锁的方式：</h3><p>避免或者解决死锁的三种方式如下：</p>
+<ul>
+<li><strong>让线程按照一定的顺序访问共享资源</strong></li>
+<li><strong>在访问其他锁的时候，需要先将自己的锁解开</strong></li>
+<li><strong>设置上锁的使用，可以使用 <code>pthread_mutex_trylock()</code> 函数</strong> </li>
+</ul>
+<br>
+
+<h3 id="读写锁："><a href="#读写锁：" class="headerlink" title="读写锁："></a>读写锁：</h3><p>除了使用互斥量(锁)之外，还可以采用 读写锁 来控制多线程访问共享资源。</p>
+<h4 id="读写锁的理解："><a href="#读写锁的理解：" class="headerlink" title="读写锁的理解："></a>读写锁的理解：</h4><ul>
+<li>读锁 - 对内存做读操作</li>
+<li>写锁 - 对内存做写操作</li>
+</ul>
+<h4 id="读写锁的特性："><a href="#读写锁的特性：" class="headerlink" title="读写锁的特性："></a><font color=#FF0000 face="幼圆">读写锁的特性：</font></h4><ul>
+<li>线程 A 加锁成功，又来了三个线程，做读操作，可以加锁成功<ul>
+<li><font color=#FF0000  size=4 face="幼圆">读共享</font> - 并行处理</li>
+</ul>
+</li>
+<li>线程 A 加写锁成功，又来了三个线程，做读操作，三个线程阻塞<ul>
+<li><font color=#FF0000  size=4 face="幼圆">写独占</font></li>
+</ul>
+</li>
+<li>线程 A 加读锁成功，又来了 B 线程加写锁线程阻塞，又来了 C 线程加读锁阻塞<ul>
+<li><font color=#FF0000  size=4 face="幼圆">读写不能同时进行</font></li>
+<li><font color=#FF0000  size=4 face="幼圆">写的优先级高</font>（即使后面线程有先后来顺序来，也会看一下优先级）</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<h3 id="读写锁的场景练习："><a href="#读写锁的场景练习：" class="headerlink" title="读写锁的场景练习："></a>读写锁的场景练习：</h3><p>上面的<strong>读写锁的特性</strong> 可以看做是理论部分，然后这里用几个实际场景进行一下分析：</p>
+<ul>
+<li>线程 A 加写锁成功，线程 B 请求读锁<ul>
+<li>线程 B 阻塞</li>
+</ul>
+</li>
+<li>线程 A 持有读锁，线程 B 请求写锁<ul>
+<li>线程 B 阻塞</li>
+</ul>
+</li>
+<li>线程 A 拥有读锁，线程 B 请求读锁<ul>
+<li>线程 B 加锁成功</li>
+</ul>
+</li>
+<li>线程 A 持有读锁，然后线程 B 请求写锁，然后线程 C 请求读锁<ul>
+<li>B 阻塞，C 阻塞 -写的优先级高</li>
+<li>A 解锁，B 线程加写锁成功，C继续阻塞</li>
+<li>B 解锁，C 加读锁成功</li>
+</ul>
+</li>
+<li>线程A持有写锁，然后线程B请求读锁，然后线程C请求写锁</li>
+</ul>
+<br>
+
+<h3 id="读写锁的使用场景："><a href="#读写锁的使用场景：" class="headerlink" title="读写锁的使用场景："></a>读写锁的使用场景：</h3><ul>
+<li>互斥锁 - 读写串行</li>
+<li>读写锁：<ul>
+<li>读：并行</li>
+<li>写：串行</li>
+</ul>
+</li>
+<li>程序中的 “读操作” 大于 ”写操作“ 的时候，比如说 12306 买火车票的例子 ，就有大量的率新读取数据，远大于买票的时候写操作。</li>
+</ul>
+<br>
+
+<h3 id="读写锁的主要操作函数："><a href="#读写锁的主要操作函数：" class="headerlink" title="读写锁的主要操作函数："></a>读写锁的主要操作函数：</h3><p>读写锁的使用流程和互斥量(锁)的流程基本一样。</p>
+<ul>
+<li><p>初始化读写锁</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">pthread_rwlock_init</span><span class="token punctuation">(</span>pthread_rwlock_t <span class="token operator">*</span>lock<span class="token punctuation">,</span> <span class="token keyword">const</span> pthread_rwlockattr_t <span class="token operator">*</span>attr<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></li>
+<li><p>销毁读写锁</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">pthread_rwlock_destroy</span><span class="token punctuation">(</span>pthread_rwlock_t <span class="token operator">*</span>lock<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></li>
+<li><p>加读锁</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">pthread_rwlock_rdlock</span><span class="token punctuation">(</span>pthread_rwlock_t <span class="token operator">*</span>lock<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></li>
+<li><p>尝试加读锁</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">pthread_rwlock_tryrdlock</span><span class="token punctuation">(</span>pthread_rwlock_t <span class="token operator">*</span>lock<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></li>
+<li><p>加写锁</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">pthread_rwlock_wrlock</span><span class="token punctuation">(</span>pthread_rwlock_t <span class="token operator">*</span>lock<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></li>
+<li><p>尝试加写锁</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">pthread_rwlock_trywrlock</span><span class="token punctuation">(</span>pthread_rwlock_t <span class="token operator">*</span>lock<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></li>
+<li><p>解锁</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">pthread_rwlock_unlock</span><span class="token punctuation">(</span>pthread_rwlock_t <span class="token operator">*</span>lock<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></li>
+</ul>
+<br>
+
+<h3 id="写一个运用读写锁的例子："><a href="#写一个运用读写锁的例子：" class="headerlink" title="写一个运用读写锁的例子："></a>写一个运用读写锁的例子：</h3><p>上面例子讲了这么多用法和属性作为铺垫，这里有一代码例子，讲解读写锁的使用例子：</p>
+<ul>
+<li><p><strong>需求练习：</strong> </p>
+<ul>
+<li>3 个线程不定时写同一全局资源，5 个线程不定时读同一全局资源</li>
+</ul>
+</li>
+<li><p><strong>代码：</strong></p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;unistd.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;pthread.h></span></span>
+
+<span class="token keyword">int</span> g_number <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+pthread_rwlock_t lock<span class="token punctuation">;</span>
+
+<span class="token keyword">void</span><span class="token operator">*</span> <span class="token function">writeFunc</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token operator">*</span> arg<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">void</span><span class="token operator">*</span> <span class="token function">readFunc</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token operator">*</span> arg<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    pthread_t p<span class="token punctuation">[</span><span class="token number">8</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+
+    <span class="token function">pthread_rwlock_init</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>lock<span class="token punctuation">,</span> <span class="token keyword">nullptr</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">//初始化一个锁</span>
+
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">3</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  <span class="token comment">//创建写线程</span>
+        <span class="token function">pthread_create</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>p<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token keyword">nullptr</span><span class="token punctuation">,</span> writeFunc<span class="token punctuation">,</span> <span class="token keyword">nullptr</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">3</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">8</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  <span class="token comment">//创建读线程</span>
+        <span class="token function">pthread_create</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>p<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token keyword">nullptr</span><span class="token punctuation">,</span> readFunc<span class="token punctuation">,</span> <span class="token keyword">nullptr</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">8</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>  <span class="token comment">//阻塞回收子线程的 pcb</span>
+        <span class="token function">pthread_join</span><span class="token punctuation">(</span>p<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token keyword">nullptr</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token function">pthread_rwlock_destroy</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>lock<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">//销毁读写锁，释放锁资源</span>
+    
+    <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">void</span><span class="token operator">*</span> <span class="token function">writeFunc</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token operator">*</span> arg<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">pthread_rwlock_wrlock</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>lock<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">//加写锁</span>
+        g_number<span class="token operator">++</span><span class="token punctuation">;</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"--write: %lu, %d\n"</span><span class="token punctuation">,</span> <span class="token function">pthread_self</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> g_number<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">pthread_rwlock_unlock</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>lock<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//解锁</span>
+        <span class="token function">usleep</span><span class="token punctuation">(</span><span class="token number">500</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    
+    <span class="token keyword">return</span> <span class="token keyword">nullptr</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">void</span><span class="token operator">*</span> <span class="token function">readFunc</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token operator">*</span> arg<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">pthread_rwlock_rdlock</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>lock<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//加读锁</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"--read : %lu, %d\n"</span><span class="token punctuation">,</span> <span class="token function">pthread_self</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> g_number<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">pthread_rwlock_unlock</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>lock<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//解锁</span>
+        <span class="token function">usleep</span><span class="token punctuation">(</span><span class="token number">500</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">return</span> <span class="token keyword">nullptr</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></li>
+<li><p><strong>运行效果：</strong></p>
+<ul>
+<li><p>屏蔽去掉加锁解锁的几行注释，则会出现以下异常情况，小数可能在大数后面再执行打印语句：</p>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200427_215101.png" width="60%"/ loading="lazy"></li>
+<li><p>加上读写锁之后，得到预期正确结果，大数只会出现在小数后面打印</p>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200427_214901.png" width="60%"/ loading="lazy"></li>
+</ul>
+</li>
+</ul>
+<br>
+
+<h3 id="下载地址："><a href="#下载地址：" class="headerlink" title="下载地址："></a>下载地址：</h3><p> <a target="_blank" rel="noopener" href="https://github.com/xmuli/linuxExample/tree/master/19_pthread_rwlock_wrlock">19_pthread_rwlock_wrlock</a></p>
+<p>欢迎 star 和 fork 这个系列的 linux 学习，附学习由浅入深的目录。</p>
+</div><div id="reward-container"><span class="hty-icon-button button-glow" id="reward-button" title="打赏" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === &quot;none&quot;) ? &quot;block&quot; : &quot;none&quot;;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-hand-coin-line"></use></svg></span><div id="reward-comment">若文章有所感所获，亦可请我共饮一杯肥宅冰阔落；</div><div id="qr" style="display:none;"><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png" alt="支付宝" title="支付宝"></a><div><span style="color:#00A3EE"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-alipay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png" alt="微信支付" title="微信支付"></a><div><span style="color:#2DC100"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-wechat-pay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png" alt="QQ 支付" title="QQ 支付"></a><div><span style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></span></div></div></div></div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>偕臧</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="https://ifmet.cn/posts/9e69ff46/" title="Linux中原子操作，死锁原因以及解决方法，读写锁的属性和函数使用pthread_rwlock_wrlock()">https://ifmet.cn/posts/9e69ff46/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"><a class="post-nav-prev" href="/posts/63d476f1/" rel="prev" title="Linux 该如何自我系统的学习「心路」？"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-left-s-line"></use></svg><span class="post-nav-text">Linux 该如何自我系统的学习「心路」？</span></a></div><div class="post-nav-item"><a class="post-nav-next" href="/posts/ea6e5a6c/" rel="next" title="Linux中使用使用互斥量(锁)Mutex来操持多线程同步执行pthread_mutex_lock()"><span class="post-nav-text">Linux中使用使用互斥量(锁)Mutex来操持多线程同步执行pthread_mutex_lock()</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div class="hty-card" id="comment"><div class="comment-tooltip text-center"><span></span><br></div><div id="valine-container"></div><script>Yun.utils.getScript("https://cdn.jsdelivr.net/npm/valine@latest/dist/Valine.min.js", () => {
+  const valineConfig = {"enable":true,"appId":"j1ERzyBCVwKtzx1t7EOv5ur8-MdYXbMMI","appKey":"EuraMPDEgt5G8iLWSNrkQ49n","placeholder":"不同的观点和想法相遇，促进彼此的成长，当然，这里也可以俏皮一下 (´・ω・`) ~~~ (填写邮箱可以收到回复)","avatar":"wavatar","pageSize":10,"visitor":true,"highlight":true,"recordIP":true,"enableQQ":true,"meta":["nick","mail","link"],"el":"#valine-container","lang":"zh-cn"}
+  valineConfig.path = "/posts/9e69ff46/"
+  new Valine(valineConfig)
+}, window.Valine);</script></div></main><footer class="sidebar-translate" id="footer"><div class="beian"><a rel="noopener" href="https://beian.miit.gov.cn/" target="_blank">鄂ICP备2021002780号</a></div><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> 偕臧</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.4.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.5.2</span></div><div class="live_time"><span>本博客已萌萌哒地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  setTimeout(blog_live_time, 1000);
+  const start = new Date('2019-06-09T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="goUp" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><a class="popup-trigger hty-icon-button icon-search" id="search" href="javascript:;" title="搜索"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-search-line"></use></svg></span></a><script>window.addEventListener("DOMContentLoaded", () => {
+  // Handle and trigger popup window
+  document.querySelector(".popup-trigger").addEventListener("click", () => {
+    document.querySelector(".popup").classList.add("show");
+    setTimeout(() => {
+      document.querySelector(".search-input").focus();
+    }, 100);
+  });
+
+  // Monitor main search box
+  const onPopupClose = () => {
+    document.querySelector(".popup").classList.remove("show");
+  };
+
+  document.querySelector(".popup-btn-close").addEventListener("click", () => {
+    onPopupClose();
+  });
+
+  window.addEventListener("keyup", event => {
+    if (event.key === "Escape") {
+      onPopupClose();
+    }
+  });
+});
+</script><script src="/js/search/local-search.js" defer></script><div class="popup search-popup"><div class="search-header"><span class="popup-btn-close close-icon hty-icon-button"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-close-line"></use></svg></span></div><div class="search-input-container"><input class="search-input" id="local-search-input" type="text" placeholder="搜索..." value=""></div><div id="local-search-result"></div></div><script>const date = new Date();
+const today = (date.getMonth() + 1) + "-" + date.getDate()
+const mourn_days = ["4-4"]
+if (mourn_days.includes(today)) {
+  document.documentElement.style.filter = "grayscale(1)";
+}</script></div></body></html>

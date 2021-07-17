@@ -1,0 +1,224 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="偕臧"><meta name="copyright" content="偕臧"><meta name="generator" content="Hexo 5.4.0"><meta name="theme" content="hexo-theme-yun"><title>框架hexo从win10迁移到新的电脑macOS10.14.6，重新设置环境变量 | 偕臧</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.24/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_ed8vp4atwoj.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link id="light-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism.css" media="(prefers-color-scheme: light)"><link id="dark-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: dark)"><link rel="shortcut icon" type="image/svg+xml" href="/favicon.ico"><link rel="mask-icon" href="/favicon.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/js/utils.js" as="script"><link rel="preload" href="/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"hostname":"ifmet.cn","root":"/","title":"偕臧的小站","version":"1.5.2","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"local_search":{"path":"/search.xml"},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/utils.js"></script><script src="/js/hexo-theme-yun.js"></script><link rel="alternate" href="/atom.xml" title="偕臧" type="application/atom+xml"><link rel="preconnect" href="https://www.google-analytics.com" crossorigin><script async src="https://www.googletagmanager.com/gtag/js?id=UA-160972149-1"></script><script>if (CONFIG.hostname === location.hostname) {
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-160972149-1');
+}</script><meta name="description" content="简  述： 将我自己的博客框架hexo从win10迁移到新的电脑macOS10.14.6，重新设置环境变量，以便后面更好继续的写博客；之前一直都是在win10上面工作和写任务，现在前移到了macOS环境，所以以前的所有环境（IDE、图床、github本地用户配置、vim颜色配置、hexo命令等）的这些个环境变量等等，都是需要我自己来重新配置；还有很多软件都是重新寻找替代品；习惯也都是需要在新的系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="框架hexo从win10迁移到新的电脑macOS10.14.6，重新设置环境变量">
+<meta property="og:url" content="https://ifmet.cn/posts/b331566b/index.html">
+<meta property="og:site_name" content="偕臧">
+<meta property="og:description" content="简  述： 将我自己的博客框架hexo从win10迁移到新的电脑macOS10.14.6，重新设置环境变量，以便后面更好继续的写博客；之前一直都是在win10上面工作和写任务，现在前移到了macOS环境，所以以前的所有环境（IDE、图床、github本地用户配置、vim颜色配置、hexo命令等）的这些个环境变量等等，都是需要我自己来重新配置；还有很多软件都是重新寻找替代品；习惯也都是需要在新的系统">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/touwoyimuli/FigureBed/dev/img/20191024235102.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/touwoyimuli/FigureBed/dev/img/20191024235547.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/touwoyimuli/FigureBed/dev/img/20191025004530.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/touwoyimuli/FigureBed/dev/img/20191025004349.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/touwoyimuli/FigureBed/dev/img/20191025004615.png">
+<meta property="article:published_time" content="2019-10-25T21:49:52.000Z">
+<meta property="article:modified_time" content="2019-10-25T21:49:52.000Z">
+<meta property="article:author" content="偕臧">
+<meta property="article:tag" content="偕臧, xmuli, c++, Qt, 哲学">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/touwoyimuli/FigureBed/dev/img/20191024235102.png"><script src="/js/ui/mode.js"></script></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="偕臧"><img width="96" loading="lazy" src="/xmuli.png" alt="偕臧"><span class="site-author-status" title="一片四叶幸运草">🍀</span></a><div class="site-author-name"><a href="/about/">偕臧</a></div><a class="site-name" href="/about/site.html">偕臧</a><sub class="site-subtitle"></sub><div class="site-desciption">看待世界始终保持着好奇</div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">245</span></a></div><div class="site-state-item"><a href="/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">25</span></a></div><div class="site-state-item"><a href="/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">29</span></a></div><a class="site-state-item hty-icon-button" href="https://ifmet.cn/about" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><div class="links-of-author"><a class="links-of-author-item hty-icon-button" rel="noopener" href="/atom.xml" title="RSS" target="_blank" style="color:orange"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-rss-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="http://sighttp.qq.com/authd?IDKEY=31f3ef7312b39e2c8dc822ae2f4c3b3118e1a6f31cc83373" title="QQ" target="_blank" style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://github.com/xmuli" title="GitHub" target="_blank" style="color:#181717"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-github-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="mailto:xmulitech@gmail.com" title="E-Mail" target="_blank" style="color:#8E71C1"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-mail-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://space.bilibili.com/106940738" title="哔哩哔哩动画" target="_blank" style="color:#FF8EB3"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-bilibili-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://twitter.com/xmulite" title="Twitter" target="_blank" style="color:#1da1f2"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-twitter-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://t.me/xmuli" title="Telegram" target="_blank" style="color:#0088CC"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-telegram-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://xmuli.blog.csdn.net" title="Travelling" target="_blank" style="color:var(--hty-text-color)"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-send-plane-2-line"></use></svg></a></div><hr style="margin:0.5rem 1rem"><div class="links"><a class="links-item hty-icon-button" href="/links/" title="友链直达" style="color:dodgerblue"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-women-line"></use></svg></a><a class="links-item hty-icon-button" href="/learn/" title="学习他人" style="color:Pink"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-heart-line"></use></svg></a></div><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8C%E6%AD%A5%E5%8D%9A%E6%96%87%EF%BC%9A"><span class="toc-number">1.</span> <span class="toc-text">同步博文：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BD%93%E5%89%8D%E8%83%8C%E6%99%AF%EF%BC%9A"><span class="toc-number">2.</span> <span class="toc-text">当前背景：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%89%E8%A3%85node-js"><span class="toc-number">3.</span> <span class="toc-text">安装node.js:</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%89%E8%A3%85git%EF%BC%9A"><span class="toc-number">4.</span> <span class="toc-text">安装git：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%89%E8%A3%85Hexo%E6%A1%86%E6%9E%B6%EF%BC%9A"><span class="toc-number">5.</span> <span class="toc-text">安装Hexo框架：</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95%E4%B8%80%EF%BC%88%E4%BC%9A%E7%BB%A7%E7%BB%AD%E6%8A%A5%E5%85%B6%E5%AE%83%E6%8A%A5%E9%94%99%EF%BC%8C%E5%A4%B1%E8%B4%A5%EF%BC%89%EF%BC%9A"><span class="toc-number">5.1.</span> <span class="toc-text">解决方法一（会继续报其它报错，失败）：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95%E4%BA%8C-%E6%88%90%E5%8A%9F%E5%AE%89%E8%A3%85-%EF%BC%9A"><span class="toc-number">5.2.</span> <span class="toc-text">解决方法二(成功安装)：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%AA%8C%E8%AF%81%E8%BF%81%E7%A7%BB%E6%88%90%E5%8A%9F%EF%BC%9A"><span class="toc-number">6.</span> <span class="toc-text">验证迁移成功：</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#node-sass%E6%8A%A5%E9%94%99%E6%8B%A6%E8%B7%AF%E8%99%8E%EF%BC%9A"><span class="toc-number">6.1.</span> <span class="toc-text">node-sass报错拦路虎：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#node-sass%E8%A7%A3%E5%86%B3%E5%8F%82%E8%80%83%EF%BC%9A"><span class="toc-number">6.2.</span> <span class="toc-text">node-sass解决参考：</span></a></li></ol></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="https://ifmet.cn/posts/b331566b/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="偕臧"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="偕臧"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">框架hexo从win10迁移到新的电脑macOS10.14.6，重新设置环境变量<a class="post-edit-link" href="https://github.com/xmuli/xmuliMark/tree/master/source/_posts/框架hexo从win10迁移到新的电脑macOS10.14.6，重新设置环境变量.md" target="_blank" title="编辑" rel="noopener"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-edit-line"></use></svg></a></h1><div class="post-meta"><div class="post-time" style="display:block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2019-10-25 21:49:52" itemprop="dateCreated datePublished" datetime="2019-10-25T21:49:52+00:00">2019-10-25</time></div><span class="post-count"><span class="post-symbolcount"><span class="post-meta-item-icon" title="本文字数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-file-word-line"></use></svg></span> <span title="本文字数">2k</span><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读时长"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-timer-line"></use></svg></span> <span title="阅读时长">8m</span></span></span><span class="leancloud_visitors" id="/posts/b331566b/" data-flag-title="框架hexo从win10迁移到新的电脑macOS10.14.6，重新设置环境变量"><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读次数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-eye-line"></use></svg> <span class="leancloud-visitors-count"></span></span></span><div class="post-classify"><span class="post-category"> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/categories/%E5%AD%A6%E4%B9%A0-Hexo/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">学习 - Hexo</span></a></span></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><p><strong>简  述：</strong> <strong>将我自己的博客框架<code>hexo</code>从<code>win10</code>迁移到新的电脑<code>macOS10.14.6</code>，重新设置环境变量，以便后面更好继续的写博客；</strong>之前一直都是在win10上面工作和写任务，现在前移到了macOS环境，所以以前的所有环境（IDE、图床、github本地用户配置、vim颜色配置、hexo命令等）的这些个环境变量等等，都是需要我自己来重新配置；还有很多软件都是重新寻找替代品；习惯也都是需要在新的系统（向往一个好看的Linux/Uinx环境已经很久了）来适应的；讲真，想用苹果的MacOS已经很久，之前只是在虚拟机感受体验一下过， 界面很好看，但是黑苹果毕竟体验不佳（没有预料的如丝绸一般的体验），这不，新的MacBook Pro 13到手，就迁移新机；嘿嘿;</p>
+<span id="more"></span>
+
+<p>[TOC]</p>
+<br>
+
+<blockquote>
+<p><font color=#D0087E size=4 face="STFangsong">本文初发于 <strong>“偕臧的小站”</strong>  <a href="https://ifmet.cn/">ifmet.cn</a>，同步转载于此。</font></p>
+</blockquote>
+<br>
+
+<h2 id="同步博文："><a href="#同步博文：" class="headerlink" title="同步博文："></a><font color=#D0087E  face="幼圆">同步博文：</font></h2><ul>
+<li><font color=#D0087E  size=4 face="幼圆"><strong>本篇的<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_33154343">csdn</a>/<a target="_blank" rel="noopener" href="https://touwoyimuli.github.io/">github.io</a>同步博文:</strong> </font> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_33154343/article/details/102750585">框架hexo从win10迁移到新的电脑macOS10.14.6，重新设置环境变量</a></li>
+</ul>
+<br>
+
+<h2 id="当前背景："><a href="#当前背景：" class="headerlink" title="当前背景："></a>当前背景：</h2><p>之前一直是在<code>win10</code>上面，发布和维护我的博客<a target="_blank" rel="noopener" href="https://touwoyimuli.github.io/">https://touwoyimuli.github.io</a> ，其中<code>hexo</code>工具命令，这会直接将整个文件夹（主要是<code>*.md</code>文件）拷贝过来了；现在需要的就是，参考以前的文章，将<code>hexo</code>在<code>macOS</code>上面再次安装一下，以及一些插件等等，阿西吧！想着就头疼（安装好了，以后用新笔记本写博客，也一定是爽歪歪~），全部就当是复习一遍咯，<strong>系统版本是win10迁移到macOS10.14.6</strong></p>
+<br>
+
+<h2 id="安装node-js"><a href="#安装node-js" class="headerlink" title="安装node.js:"></a>安装node.js:</h2><p>Node.js的官网：<a target="_blank" rel="noopener" href="https://nodejs.org/en/">https://nodejs.org/en</a> ,可以自行下载，推荐下载LTS（长期支持版本）版本；截止2019-10-24 22:55时刻，作者官网最新的LTS下载的版本是12.13.0；</p>
+<img src="https://raw.githubusercontent.com/touwoyimuli/FigureBed/dev/img/20191024235102.png"/ loading="lazy">
+
+<br>
+
+<h2 id="安装git："><a href="#安装git：" class="headerlink" title="安装git："></a>安装git：</h2><p>貌似macOS是自带的git，不过这里还是查询一下node.js是否安装成功，以及git的版本号；</p>
+<p>若是没有安装git话，可以自己去git官网下载安装：<a target="_blank" rel="noopener" href="https://git-scm.com/downloads">https://git-scm.com/downloads</a> </p>
+<img src="https://raw.githubusercontent.com/touwoyimuli/FigureBed/dev/img/20191024235547.png"/ loading="lazy">
+
+<br>
+
+<h2 id="安装Hexo框架："><a href="#安装Hexo框架：" class="headerlink" title="安装Hexo框架："></a>安装Hexo框架：</h2><p>先检查一下，本机器有没有安装hexo，确认一番；再上述两个都安装好了之后，即可以安装<code>nmp</code>，来安装<code>Hexo</code>的安装。(推荐开启全局代理，速度更快运行以下命令)</p>
+<p>使用官方<a target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/">https://hexo.io/zh-cn/docs</a>的推荐命令：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">npm</span> <span class="token function">install</span> -g hexo-cli<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p> 使用官方命令安装，却发现一直会安装失败？？？出现如下错误提示。。。这是么样个烫饭？？？待我google一番，再回来，哼哼~，报错如下：</p>
+<img src="https://raw.githubusercontent.com/touwoyimuli/FigureBed/dev/img/20191025004530.png"/ loading="lazy">
+
+<p>实际过程中，会直接编译失败，通过参考<a target="_blank" rel="noopener" href="https://www.itfanr.cc/2017/10/27/problems-for-configuring-hexo-blog-in-mac/">Mac系统下配置Hexo博客运行环境遇到的问题</a>一篇，虽然没有得到针对我的没有起效，但是却有启发我；<strong>最终在先尝试解决方法一无效之后，感悟出了解决方法二，安装成功。</strong> 在此，仍然把两种方法都再写此处，万一有一种可以适合你捏~</p>
+<br>
+
+<h3 id="解决方法一（会继续报其它报错，失败）："><a href="#解决方法一（会继续报其它报错，失败）：" class="headerlink" title="解决方法一（会继续报其它报错，失败）："></a>解决方法一（会继续报其它报错，失败）：</h3><ul>
+<li>第一步,赋予目录权限:</li>
+</ul>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">sudo</span> <span class="token function">chown</span> -R <span class="token variable"><span class="token variable">`</span><span class="token function">whoami</span><span class="token variable">`</span></span> /usr/local/lib/node_modules<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<ul>
+<li>第二步,安装hexo:</li>
+</ul>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">npm</span> <span class="token function">install</span> -g hexo-cli<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p><strong>需要注意的点</strong>: 在安装hexo时,不要用 <code>sudo</code> 命令.</p>
+<p>安装过程会报其他<code>ERROR</code>：</p>
+<img src="https://raw.githubusercontent.com/touwoyimuli/FigureBed/dev/img/20191025004349.png"/ loading="lazy">
+
+<br>
+
+<h3 id="解决方法二-成功安装-："><a href="#解决方法二-成功安装-：" class="headerlink" title="解决方法二(成功安装)："></a>解决方法二(成功安装)：</h3><p>或许是方法一有了铺垫吧（开启了第一个文件路径夹得权限）？，当我尝试运行如下命令时候(反着来方法一)，却安装成功了</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">npm</span> <span class="token function">install</span> -g hexo-cli<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<img src="https://raw.githubusercontent.com/touwoyimuli/FigureBed/dev/img/20191025004615.png"/ loading="lazy">
+
+<br>
+
+<h2 id="验证迁移成功："><a href="#验证迁移成功：" class="headerlink" title="验证迁移成功："></a>验证迁移成功：</h2><p>终端进入到自己的文件夹下面的路径下，运行熟悉的命令</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">hexo clean
+hexo g -d<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>cao,怎么没有成功，看了一眼报错error没想起来，应该是里面的配置数据没有修改（运行推送到github.io仓库）的秘钥不正确（实际不是，原因见下）；大概是如此吧。不过这之前，还是先查查看；我再去改改；报错如下：</p>
+<h3 id="node-sass报错拦路虎："><a href="#node-sass报错拦路虎：" class="headerlink" title="node-sass报错拦路虎："></a>node-sass报错拦路虎：</h3><blockquote>
+<p>Error: Missing binding /Users/yuanyi/touwoyimulier/node_modules/node-sass/vendor/darwin-x64-72/binding.node</p>
+<p>Node Sass could not find a binding for your current environment: OS X 64-bit with Node.js 12.x</p>
+<p>Found bindings for the following environments:</p>
+<p>- Windows 64-bit with Node.js 10.x</p>
+<p>This usually happens because your environment has changed since running <code>npm install</code>.</p>
+<p>Run <code>npm rebuild node-sass</code> to download the binding for your current environment.</p>
+<p>at module.exports (/Users/yuanyi/touwoyimulier/node_modules/node-sass/lib/binding.js:15:13)</p>
+<p>at Object.<anonymous> (/Users/yuanyi/touwoyimulier/node_modules/node-sass/lib/index.js:14:35)</p>
+</blockquote>
+<h3 id="node-sass解决参考："><a href="#node-sass解决参考：" class="headerlink" title="node-sass解决参考："></a>node-sass解决参考：</h3><p><strong>解决方法</strong>(对我无效，只能另寻它法)：</p>
+<ul>
+<li><p>删除<code>/Users/yuanyi/touwoyimulier/node_modules/</code>下面的<code>node-sass</code>文件夹</p>
+</li>
+<li><p>运行命令:</p>
+</li>
+<li><p>```bash<br>  npm i node-sass</p>
+  <pre class="line-numbers language-none"><code class="language-none">
+这个等待的时间有点长，起码二十分钟，进度条才走了20%的样子;其那面的卡住时间比较长，后面会很快（相对而言）；意意识到可能是网络原因，下载和上传都为速度为1~2KB&#x2F;S，开了代理，也试过全局，干其他下载都没有问题，就只这个命令运行好慢，好晚了，先去睡觉，明天一早看结果，或者后面再试试; 我搽，运行结束了，但是报错了。。。。。。难过。。。。
+
+然后又参考了文末的一些参考文章，柑橘是最后一篇的这来两句命令产生了效果(最后一句产生了效果)；因为运行的其他的，全部都失产生了各种各样的错误，**但是总结下来，应该&#96;npm&#96;和&#96;node-sass&#96;这两个鬼东西没有安装好**吧。**若是你也一样， 可以尝试运行下面这些命令（试一下加上&#96;sudo&#96;，或许会OK）；**
+
+&#x2F;&#x2F;半夜02：37更新：因为我还没睡(明天还要上班),晕
+
+### node-sass解决成功：
+
+#### 以下为最后成功的解决方法全过程：
+
+我依次运行如下命令，供大家参考，也给自己一个日后查看：
+
+- 运行&#96;hexo clean&#96;报错：
+
+    &lt;img src&#x3D;&quot;https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;touwoyimuli&#x2F;FigureBed&#x2F;dev&#x2F;img&#x2F;20191025021732.png&quot;&#x2F;&gt;
+
+- 运行&#96;hexo -v&#96;，报错：
+
+&lt;img src&#x3D;&quot;https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;touwoyimuli&#x2F;FigureBed&#x2F;dev&#x2F;img&#x2F;20191025021958.png&quot;&#x2F;&gt;
+
+- 运行&#96;cd &#x2F;Users&#x2F;yuanyi&#x2F;touwoyimulier&#x2F;node_modules&#96;和&#96;ls&#96;,查看和想要删除&#96;node-sass&#96;
+
+&lt;img src&#x3D;&quot;https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;touwoyimuli&#x2F;FigureBed&#x2F;dev&#x2F;img&#x2F;20191025022240.png&quot;&#x2F;&gt;
+
+- 卸载&#96;npm uninstall node-sass&#96;,报错，和错误提示的最后几行，没有提示怎么做？比如修复代码
+
+&lt;img src&#x3D;&quot;https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;touwoyimuli&#x2F;FigureBed&#x2F;dev&#x2F;img&#x2F;20191025022417.png&quot;&#x2F;&gt;
+
+- 运行&#96;npm i node-sass --sass_binary_site&#x3D;https:&#x2F;&#x2F;npm.taobao.org&#x2F;mirrors&#x2F;node-sass&#x2F;&#96;（**对的，就是这一句，运行成功了）**,再碰碰运气。
+
+&lt;img src&#x3D;&quot;https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;touwoyimuli&#x2F;FigureBed&#x2F;dev&#x2F;img&#x2F;20191025023004.png&quot;&#x2F;&gt;
+
+- 去github看一下，确认一下，是彻底成功了；但是github没有那个绿色的小方块格子，应该是没有本地&#96;.git&#96;文件夹，还是用的以前的配置，所以不算贡献，后面有空初始化，再配置一下下；就完美了
+
+&lt;img src&#x3D;&quot;https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;touwoyimuli&#x2F;FigureBed&#x2F;dev&#x2F;img&#x2F;20191025023420.png&quot;&#x2F;&gt;
+
+&lt;br&gt;
+
+#### 最后解决方法，此处小结一下：
+
+&#96;&#96;&#96;bash
+npm uninstall node-sass
+npm i node-sass --sass_binary_site&#x3D;https:&#x2F;&#x2F;npm.taobao.org&#x2F;mirrors&#x2F;node-sass&#x2F;  （应该是这句成功了）
+
+npm audit fix     &#x2F;&#x2F;再修复一下
+
+hexo clean        &#x2F;&#x2F;清理缓存
+hexo g -d         &#x2F;&#x2F;发布到github<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></li>
+</ul>
+<br>
+
+<p><strong>参考博文</strong>：</p>
+<ul>
+<li><a href="%5Bhttps://touwoyimuli.github.io/2019/06/29/hexo%E5%8D%9A%E5%AE%A2-Maupassant%E4%B8%BB%E9%A2%98-%E6%97%A7%E7%94%B5%E8%84%91%E8%BF%81%E7%A7%BB%E5%88%B0%E6%96%B0%E7%94%B5%E8%84%91/%5D(https://touwoyimuli.github.io/2019/06/29/hexo%E5%8D%9A%E5%AE%A2-Maupassant%E4%B8%BB%E9%A2%98-%E6%97%A7%E7%94%B5%E8%84%91%E8%BF%81%E7%A7%BB%E5%88%B0%E6%96%B0%E7%94%B5%E8%84%91/)">hexo博客 Maupassant主题 旧电脑迁移到新电脑</a> (win10-&gt;win10)自己参考自己的文章哈哈哈哈哈哈哈</li>
+<li><a target="_blank" rel="noopener" href="https://www.itfanr.cc/2017/10/27/problems-for-configuring-hexo-blog-in-mac/">Mac系统下配置Hexo博客运行环境遇到的问题</a> </li>
+<li><a target="_blank" rel="noopener" href="http://www.is17.com/96/">nodejs8.x hexo-renderer-sass报错解决方法</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.fangr.cc/2017/09/27/hexo-workflow.html">博客迁移到 Hexo 遇到的一些问题 | Hexo</a></li>
+<li><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000010984731">整理 node-sass 安装失败的原因及解决办法</a> (重点参考)</li>
+</ul>
+</div><div id="reward-container"><span class="hty-icon-button button-glow" id="reward-button" title="打赏" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === &quot;none&quot;) ? &quot;block&quot; : &quot;none&quot;;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-hand-coin-line"></use></svg></span><div id="reward-comment">若文章有所感所获，亦可请我共饮一杯肥宅冰阔落；</div><div id="qr" style="display:none;"><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png" alt="支付宝" title="支付宝"></a><div><span style="color:#00A3EE"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-alipay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png" alt="微信支付" title="微信支付"></a><div><span style="color:#2DC100"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-wechat-pay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png" alt="QQ 支付" title="QQ 支付"></a><div><span style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></span></div></div></div></div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>偕臧</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="https://ifmet.cn/posts/b331566b/" title="框架hexo从win10迁移到新的电脑macOS10.14.6，重新设置环境变量">https://ifmet.cn/posts/b331566b/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"><a class="post-nav-prev" href="/posts/129bf9f1/" rel="prev" title="在macOS 10.14的虚拟机VMware Fusionlimian里面安装deepin15.11（Linux）"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-left-s-line"></use></svg><span class="post-nav-text">在macOS 10.14的虚拟机VMware Fusionlimian里面安装deepin15.11（Linux）</span></a></div><div class="post-nav-item"><a class="post-nav-next" href="/posts/f879ecd2/" rel="next" title="关联macOS10.14.6的git本地环境和自己的github仓库"><span class="post-nav-text">关联macOS10.14.6的git本地环境和自己的github仓库</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div class="hty-card" id="comment"><div class="comment-tooltip text-center"><span></span><br></div><div id="valine-container"></div><script>Yun.utils.getScript("https://cdn.jsdelivr.net/npm/valine@latest/dist/Valine.min.js", () => {
+  const valineConfig = {"enable":true,"appId":"j1ERzyBCVwKtzx1t7EOv5ur8-MdYXbMMI","appKey":"EuraMPDEgt5G8iLWSNrkQ49n","placeholder":"不同的观点和想法相遇，促进彼此的成长，当然，这里也可以俏皮一下 (´・ω・`) ~~~ (填写邮箱可以收到回复)","avatar":"wavatar","pageSize":10,"visitor":true,"highlight":true,"recordIP":true,"enableQQ":true,"meta":["nick","mail","link"],"el":"#valine-container","lang":"zh-cn"}
+  valineConfig.path = "/posts/b331566b/"
+  new Valine(valineConfig)
+}, window.Valine);</script></div></main><footer class="sidebar-translate" id="footer"><div class="beian"><a rel="noopener" href="https://beian.miit.gov.cn/" target="_blank">鄂ICP备2021002780号</a></div><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> 偕臧</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.4.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.5.2</span></div><div class="live_time"><span>本博客已萌萌哒地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  setTimeout(blog_live_time, 1000);
+  const start = new Date('2019-06-09T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="goUp" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><a class="popup-trigger hty-icon-button icon-search" id="search" href="javascript:;" title="搜索"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-search-line"></use></svg></span></a><script>window.addEventListener("DOMContentLoaded", () => {
+  // Handle and trigger popup window
+  document.querySelector(".popup-trigger").addEventListener("click", () => {
+    document.querySelector(".popup").classList.add("show");
+    setTimeout(() => {
+      document.querySelector(".search-input").focus();
+    }, 100);
+  });
+
+  // Monitor main search box
+  const onPopupClose = () => {
+    document.querySelector(".popup").classList.remove("show");
+  };
+
+  document.querySelector(".popup-btn-close").addEventListener("click", () => {
+    onPopupClose();
+  });
+
+  window.addEventListener("keyup", event => {
+    if (event.key === "Escape") {
+      onPopupClose();
+    }
+  });
+});
+</script><script src="/js/search/local-search.js" defer></script><div class="popup search-popup"><div class="search-header"><span class="popup-btn-close close-icon hty-icon-button"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-close-line"></use></svg></span></div><div class="search-input-container"><input class="search-input" id="local-search-input" type="text" placeholder="搜索..." value=""></div><div id="local-search-result"></div></div><script>const date = new Date();
+const today = (date.getMonth() + 1) + "-" + date.getDate()
+const mourn_days = ["4-4"]
+if (mourn_days.includes(today)) {
+  document.documentElement.style.filter = "grayscale(1)";
+}</script></div></body></html>

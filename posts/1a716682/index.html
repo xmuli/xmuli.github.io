@@ -1,0 +1,351 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="偕臧"><meta name="copyright" content="偕臧"><meta name="generator" content="Hexo 5.4.0"><meta name="theme" content="hexo-theme-yun"><title>Linux中未决信号集和阻塞信号集的状态关系sigaddset，以及捕捉信号函数signal、sigaction | 偕臧</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.24/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_ed8vp4atwoj.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link id="light-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism.css" media="(prefers-color-scheme: light)"><link id="dark-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: dark)"><link rel="shortcut icon" type="image/svg+xml" href="/favicon.ico"><link rel="mask-icon" href="/favicon.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/js/utils.js" as="script"><link rel="preload" href="/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"hostname":"ifmet.cn","root":"/","title":"偕臧的小站","version":"1.5.2","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"local_search":{"path":"/search.xml"},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/utils.js"></script><script src="/js/hexo-theme-yun.js"></script><link rel="alternate" href="/atom.xml" title="偕臧" type="application/atom+xml"><link rel="preconnect" href="https://www.google-analytics.com" crossorigin><script async src="https://www.googletagmanager.com/gtag/js?id=UA-160972149-1"></script><script>if (CONFIG.hostname === location.hostname) {
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-160972149-1');
+}</script><meta name="description" content="简  述：　在上一篇中，讲解了 Linux 的系统中基本信号概念入门。这里就说一下两个重要的概念，系统内核里面的 未决信号集 和 阻塞信号集 的状态关系，以及处于用户区域的 自定义的信号集 ，如何处理这三者之间的关系。和 Linux 中的信号捕捉 ，以及捕捉函数相关函数相关的使用。  自定义信号集： sigaddset()    &#x2F;&#x2F;将指定信号置为 1，添加到自定义集中  sigdelset(">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux中未决信号集和阻塞信号集的状态关系sigaddset，以及捕捉信号函数signal、sigaction">
+<meta property="og:url" content="https://ifmet.cn/posts/1a716682/index.html">
+<meta property="og:site_name" content="偕臧">
+<meta property="og:description" content="简  述：　在上一篇中，讲解了 Linux 的系统中基本信号概念入门。这里就说一下两个重要的概念，系统内核里面的 未决信号集 和 阻塞信号集 的状态关系，以及处于用户区域的 自定义的信号集 ，如何处理这三者之间的关系。和 Linux 中的信号捕捉 ，以及捕捉函数相关函数相关的使用。  自定义信号集： sigaddset()    &#x2F;&#x2F;将指定信号置为 1，添加到自定义集中  sigdelset(">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200407_233036.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200408175735.gif">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200408175755.gif">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200410_224339.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200410_221353.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200410_221434.png">
+<meta property="article:published_time" content="2020-04-10T23:06:25.000Z">
+<meta property="article:modified_time" content="2020-04-10T23:06:25.000Z">
+<meta property="article:author" content="偕臧">
+<meta property="article:tag" content="偕臧, xmuli, c++, Qt, 哲学">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200407_233036.png"><script src="/js/ui/mode.js"></script></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="偕臧"><img width="96" loading="lazy" src="/xmuli.png" alt="偕臧"><span class="site-author-status" title="一片四叶幸运草">🍀</span></a><div class="site-author-name"><a href="/about/">偕臧</a></div><a class="site-name" href="/about/site.html">偕臧</a><sub class="site-subtitle"></sub><div class="site-desciption">看待世界始终保持着好奇</div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">245</span></a></div><div class="site-state-item"><a href="/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">25</span></a></div><div class="site-state-item"><a href="/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">29</span></a></div><a class="site-state-item hty-icon-button" href="https://ifmet.cn/about" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><div class="links-of-author"><a class="links-of-author-item hty-icon-button" rel="noopener" href="/atom.xml" title="RSS" target="_blank" style="color:orange"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-rss-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="http://sighttp.qq.com/authd?IDKEY=31f3ef7312b39e2c8dc822ae2f4c3b3118e1a6f31cc83373" title="QQ" target="_blank" style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://github.com/xmuli" title="GitHub" target="_blank" style="color:#181717"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-github-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="mailto:xmulitech@gmail.com" title="E-Mail" target="_blank" style="color:#8E71C1"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-mail-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://space.bilibili.com/106940738" title="哔哩哔哩动画" target="_blank" style="color:#FF8EB3"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-bilibili-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://twitter.com/xmulite" title="Twitter" target="_blank" style="color:#1da1f2"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-twitter-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://t.me/xmuli" title="Telegram" target="_blank" style="color:#0088CC"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-telegram-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://xmuli.blog.csdn.net" title="Travelling" target="_blank" style="color:var(--hty-text-color)"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-send-plane-2-line"></use></svg></a></div><hr style="margin:0.5rem 1rem"><div class="links"><a class="links-item hty-icon-button" href="/links/" title="友链直达" style="color:dodgerblue"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-women-line"></use></svg></a><a class="links-item hty-icon-button" href="/learn/" title="学习他人" style="color:Pink"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-heart-line"></use></svg></a></div><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%96%E7%A8%8B%E7%8E%AF%E5%A2%83%EF%BC%9A"><span class="toc-number">1.</span> <span class="toc-text">编程环境：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%AA%E5%86%B3%E4%BF%A1%E5%8F%B7%E9%9B%86%EF%BC%9A"><span class="toc-number">2.</span> <span class="toc-text">未决信号集：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%98%BB%E5%A1%9E%E4%BF%A1%E5%8F%B7%E9%9B%86%EF%BC%9A"><span class="toc-number">3.</span> <span class="toc-text">阻塞信号集：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E4%BF%A1%E5%8F%B7%E9%9B%86%EF%BC%9A"><span class="toc-number">4.</span> <span class="toc-text">自定义信号集：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#sigprocmask-%E5%87%BD%E6%95%B0%EF%BC%9A"><span class="toc-number">5.</span> <span class="toc-text">sigprocmask() 函数：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#sigpending-%E5%87%BD%E6%95%B0%EF%BC%9A"><span class="toc-number">6.</span> <span class="toc-text">sigpending() 函数：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%99%E4%B8%80%E4%B8%AA%E5%B0%8F%E7%9A%84%E4%BE%8B%E5%AD%90%EF%BC%9A"><span class="toc-number">7.</span> <span class="toc-text">写一个小的例子：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%A1%E5%8F%B7%E6%8D%95%E6%8D%89%EF%BC%9A"><span class="toc-number">8.</span> <span class="toc-text">信号捕捉：</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#signal-%E5%87%BD%E6%95%B0%EF%BC%9A"><span class="toc-number">8.1.</span> <span class="toc-text">signal() 函数：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Unix-%E4%B8%AD%E7%9A%84-sigaction-%E5%87%BD%E6%95%B0%EF%BC%9A"><span class="toc-number">8.2.</span> <span class="toc-text">Unix 中的 sigaction() 函数：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Linux-%E4%B8%AD%E7%9A%84-sigaction-%E5%87%BD%E6%95%B0%EF%BC%9A"><span class="toc-number">8.3.</span> <span class="toc-text">Linux 中的 sigaction() 函数：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80%EF%BC%9A"><span class="toc-number">9.</span> <span class="toc-text">下载地址：</span></a></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="https://ifmet.cn/posts/1a716682/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="偕臧"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="偕臧"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Linux中未决信号集和阻塞信号集的状态关系sigaddset，以及捕捉信号函数signal、sigaction<a class="post-edit-link" href="https://github.com/xmuli/xmuliMark/tree/master/source/_posts/Linux中未决信号集和阻塞信号集的状态关系sigaddset，以及捕捉信号函数signal、sigaction.md" target="_blank" title="编辑" rel="noopener"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-edit-line"></use></svg></a></h1><div class="post-meta"><div class="post-time" style="display:block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2020-04-10 23:06:25" itemprop="dateCreated datePublished" datetime="2020-04-10T23:06:25+00:00">2020-04-10</time></div><span class="post-count"><span class="post-symbolcount"><span class="post-meta-item-icon" title="本文字数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-file-word-line"></use></svg></span> <span title="本文字数">2.4k</span><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读时长"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-timer-line"></use></svg></span> <span title="阅读时长">9m</span></span></span><span class="leancloud_visitors" id="/posts/1a716682/" data-flag-title="Linux中未决信号集和阻塞信号集的状态关系sigaddset，以及捕捉信号函数signal、sigaction"><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读次数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-eye-line"></use></svg> <span class="leancloud-visitors-count"></span></span></span><div class="post-classify"><span class="post-category"> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/categories/%E5%AD%A6%E4%B9%A0-Linux/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">学习 - Linux</span></a></span></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><p>　　<strong>简  述：</strong>　在<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_33154343/article/details/105357886">上一篇</a>中，讲解了 Linux 的系统中基本信号概念入门。这里就说一下两个重要的概念，系统内核里面的 <strong>未决信号集</strong> 和 <strong>阻塞信号集</strong> 的状态关系，以及处于用户区域的 <strong>自定义的信号集</strong> ，如何处理这三者之间的关系。和 Linux 中的<strong>信号捕捉</strong> ，以及捕捉函数相关函数相关的使用。</p>
+<ul>
+<li><strong>自定义信号集：</strong><ul>
+<li>sigaddset()    //将指定信号置为 1，添加到自定义集中 </li>
+<li>sigdelset()    //将指定信号置为 0，添加到自定义集中 </li>
+<li>sigemptyset()  //将所有信号置为 0，清空</li>
+<li>sigfillset()   //将所有信号置为 1，填充</li>
+<li>sigismember()  //判断指定信号是否存在，是否为 1</li>
+</ul>
+</li>
+<li><strong>系统信号集：</strong><ul>
+<li>sigprocmask()   //将自定义信号集设置给阻塞信号集。</li>
+<li>sigprocmask()   //读取当前信号的未决信号集。参数为输出参数，内核将未决信号集写入 set</li>
+</ul>
+</li>
+<li><strong>信号捕捉：</strong><ul>
+<li>signal()        //实现信号捕捉的功能；最简单使用一个函数。</li>
+<li>sigaction()     //同上，多一个额外功能，运行期间能够<strong>临时</strong> 屏蔽指定信号</li>
+</ul>
+</li>
+</ul>
+<span id="more"></span>
+
+<p>[TOC]</p>
+<br>
+
+<blockquote>
+<p><font color=#D0087E size=4 face="STFangsong">本文初发于 <strong>“偕臧的小站”</strong>  <a href="https://ifmet.cn/">ifmet.cn</a>，同步转载于此。</font></p>
+</blockquote>
+<br>
+
+<h3 id="编程环境："><a href="#编程环境：" class="headerlink" title="编程环境："></a>编程环境：</h3><p>　　<strong>💻：</strong>  <code>uos20</code> 📎 <code>gcc/g++ 8.3</code> 📎 <code>gdb8.0</code> </p>
+<p>　　<strong>💻：</strong>  <code>MacOS 10.14 </code> 📎 <code>gcc/g++ 9.2</code> 📎 <code>gdb8.3</code> </p>
+<br>
+
+<h3 id="未决信号集："><a href="#未决信号集：" class="headerlink" title="未决信号集："></a>未决信号集：</h3><ul>
+<li><strong>概念：</strong> 没有被当前进程处理的信号</li>
+</ul>
+<h3 id="阻塞信号集："><a href="#阻塞信号集：" class="headerlink" title="阻塞信号集："></a>阻塞信号集：</h3><ul>
+<li><strong>概念：</strong> 将某个信号放到阻塞信号集中，这个信号就不会被进程处理；当阻塞解除后，信号就会被处理。</li>
+</ul>
+<p>绘画一个草图理解一下这几则之间的关系，当一个程序跑起来之后，会生成一个进程，有自己虚拟地址控件，然后在内核区域的 PCB 中，有着未决信号集合阻塞信号集两个，被系统内核所控制，包括其和自定义信号集的类型都是一样的。左侧的数值是系统信号 1-64(或更多)对应的，然后格子里面的是该 n 号信号对应的值，值为 0 或 1；当发送一个 2 号信号在未决信号集里面时候，系统就会去阻塞信号集里面照片 2 号信号的值，若是为 1，表示阻塞，不作处理，让其一直待在未决信号集中；若是为 0，则将 2 号信号在未决信号集中的值修改为 1，且对出对应的处理。</p>
+<p>若是要修改阻塞信号集合里面的值，只能够先赋值号自顶一个信号集，然后再讲自定义的这个值设置到系统的阻塞信号中。</p>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200407_233036.png" width="80%"/ loading="lazy">
+
+
+
+<br>
+
+<h3 id="自定义信号集："><a href="#自定义信号集：" class="headerlink" title="自定义信号集："></a>自定义信号集：</h3><p>查看 man 文档，里面常见的 自定义信号集 的接口函数为如下：</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">sigaddset</span><span class="token punctuation">(</span>sigset_t <span class="token operator">*</span>set<span class="token punctuation">,</span> <span class="token keyword">int</span> signo<span class="token punctuation">)</span><span class="token punctuation">;</span>          <span class="token comment">//将指定信号置为 1，添加到自定义集中 </span>
+
+<span class="token keyword">int</span> <span class="token function">sigdelset</span><span class="token punctuation">(</span>sigset_t <span class="token operator">*</span>set<span class="token punctuation">,</span> <span class="token keyword">int</span> signo<span class="token punctuation">)</span><span class="token punctuation">;</span>          <span class="token comment">//将指定信号置为 0，添加到自定义集中 </span>
+
+<span class="token keyword">int</span> <span class="token function">sigemptyset</span><span class="token punctuation">(</span>sigset_t <span class="token operator">*</span>set<span class="token punctuation">)</span><span class="token punctuation">;</span>                   <span class="token comment">//将所有信号置为 0，清空</span>
+
+<span class="token keyword">int</span> <span class="token function">sigfillset</span><span class="token punctuation">(</span>sigset_t <span class="token operator">*</span>set<span class="token punctuation">)</span><span class="token punctuation">;</span>                    <span class="token comment">//将所有信号置为 1，填充</span>
+
+<span class="token keyword">int</span> <span class="token function">sigismember</span><span class="token punctuation">(</span><span class="token keyword">const</span> sigset_t <span class="token operator">*</span>set<span class="token punctuation">,</span> <span class="token keyword">int</span> signo<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//判断指定信号是否存在，是否为 1</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<br>
+
+<h3 id="sigprocmask-函数："><a href="#sigprocmask-函数：" class="headerlink" title="sigprocmask() 函数："></a>sigprocmask() 函数：</h3><ul>
+<li><strong>作用：</strong>  将自定义信号集设置给阻塞信号集。</li>
+</ul>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">sigprocmask</span><span class="token punctuation">(</span><span class="token keyword">int</span> how<span class="token punctuation">,</span> <span class="token keyword">const</span> sigset_t <span class="token operator">*</span>restrict set<span class="token punctuation">,</span> sigset_t <span class="token operator">*</span>restrict oset<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<ul>
+<li><strong>参数：</strong><ul>
+<li><strong>how：</strong> 假设当前屏蔽的信号屏蔽字符为 mask；<ul>
+<li><code>SIG_BLOCK</code>: 相当于 <strong>mask = mask | set</strong>  (set 为需要屏蔽的信号集)</li>
+<li><code>SIG_UNBLOCK</code>： 相当于 <strong>mask = mask &amp; ~set</strong>  (set 为需要解除屏蔽的信号集)</li>
+<li><code>SIG_SETMASK</code>： 相当于 <strong>mask = set</strong>  (set 为用于替代原始屏蔽集的新屏蔽集)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<br>
+
+<h3 id="sigpending-函数："><a href="#sigpending-函数：" class="headerlink" title="sigpending() 函数："></a>sigpending() 函数：</h3><ul>
+<li><strong>作用：</strong>  读取当前信号的未决信号集。参数为输出参数，内核将未决信号集写入 set</li>
+</ul>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">sigpending</span><span class="token punctuation">(</span>sigset_t <span class="token operator">*</span>set<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<br>
+
+<h3 id="写一个小的例子："><a href="#写一个小的例子：" class="headerlink" title="写一个小的例子："></a>写一个小的例子：</h3><p>编写一个小的例子来使用一下，设置阻塞信号集，并把所有常规的信号的未决状态打印到终端。</p>
+<ul>
+<li><p><strong>代码实现：</strong></p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;unistd.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sys/wait.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sys/time.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;signal.h></span></span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        sigset_t pendest<span class="token punctuation">;</span>
+        <span class="token function">sigpending</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>pendest<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">64</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>    <span class="token comment">//每隔一秒，对系统信号阻塞集的信号做一次校验</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">sigismember</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>pendest<span class="token punctuation">,</span> i<span class="token punctuation">)</span><span class="token punctuation">)</span>
+                <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"1"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">else</span>
+                <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"0"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
+        <span class="token function">sleep</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></li>
+<li><p><strong>运行效果：</strong></p>
+<p> 这里的 1-64 号信号，在系统的阻塞信号集中，都是 0，说明该进程没有设置信号阻塞。</p>
+  <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200408175735.gif" width="70%"/ loading="lazy"></li>
+</ul>
+<br>
+
+<h3 id="信号捕捉："><a href="#信号捕捉：" class="headerlink" title="信号捕捉："></a>信号捕捉：</h3><p>在 Linux 中， 系统会释放信号，然后内核又会根据这个信号对对应的进程做相应的动作。然后对于信号捕捉常用有如下函数的使用。</p>
+<p>其中分为简单的 <code>signal()</code> 函数，和 <code>sigaction()</code> 函数，这两个都能够捕捉指定的信号，也比较常使用</p>
+<h4 id="signal-函数："><a href="#signal-函数：" class="headerlink" title="signal() 函数："></a>signal() 函数：</h4><p>实现信号捕捉的功能；最简单一个函数。</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">typedef</span> <span class="token keyword">void</span> <span class="token punctuation">(</span><span class="token operator">*</span>sig_t<span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+sig_t <span class="token function">signal</span><span class="token punctuation">(</span><span class="token keyword">int</span> sig<span class="token punctuation">,</span> sig_t func<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+
+
+<ul>
+<li>这个函数比较特别，当然，也可以简写为 <code> void (* signal(int sig, void (*func)(int));)(int);</code> 这种复杂形式的。<ul>
+<li>第一行是一个函数指针，作为后面的函数的回调函数使用。</li>
+<li>第二行是真正的信号捕捉函数调用</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p><strong>代码例子：</strong></p>
+<p>写一个例子，捕捉信号 <code>SIGINT</code> 函数，键盘按下 <code>ctrl + c</code> 会发射此信号，然后保证此进程没有终止或者死亡的情况下，捕捉这个函数，做出自定义的行为，具体的在 func() 函数里面实现。</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;unistd.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sys/wait.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sys/time.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;signal.h></span></span>
+
+<span class="token keyword">void</span> <span class="token function">func</span><span class="token punctuation">(</span><span class="token keyword">int</span> no<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">//用作回调函数，给 signal() 调用</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token function">signal</span><span class="token punctuation">(</span>SIGINT<span class="token punctuation">,</span> func<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">//设置信号捕捉函数， 捕捉 ctrl + c</span>
+
+    <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"Keep the thread running for the non-death state.\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
+        <span class="token function">sleep</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">void</span> <span class="token function">func</span><span class="token punctuation">(</span><span class="token keyword">int</span> no<span class="token punctuation">)</span> 
+<span class="token punctuation">&#123;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"捕捉的信号为: %d\n"</span><span class="token punctuation">,</span> no<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></li>
+<li><p><strong>运行效果：</strong></p>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200408175755.gif" width="80%"/ loading="lazy"></li>
+</ul>
+<br>
+
+<h4 id="Unix-中的-sigaction-函数："><a href="#Unix-中的-sigaction-函数：" class="headerlink" title="Unix 中的 sigaction() 函数："></a>Unix 中的 sigaction() 函数：</h4><p>捕捉信号的函数，比上面使用略微复杂点，但是有一个额外的功能，<strong>可以在程序运行期间，临时屏蔽指定的信号。</strong> </p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">sigaction</span><span class="token punctuation">(</span><span class="token keyword">int</span> sig<span class="token punctuation">,</span> <span class="token keyword">const</span> <span class="token keyword">struct</span> <span class="token class-name">sigaction</span> <span class="token operator">*</span>restrict act<span class="token punctuation">,</span> <span class="token keyword">struct</span> <span class="token class-name">sigaction</span> <span class="token operator">*</span>restrict oact<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token comment">/* union for signal handlers */</span>
+<span class="token keyword">union</span> __sigaction_u <span class="token punctuation">&#123;</span>
+	<span class="token keyword">void</span>    <span class="token punctuation">(</span><span class="token operator">*</span>__sa_handler<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">void</span>    <span class="token punctuation">(</span><span class="token operator">*</span>__sa_sigaction<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">int</span><span class="token punctuation">,</span> <span class="token keyword">struct</span> <span class="token class-name">__siginfo</span> <span class="token operator">*</span><span class="token punctuation">,</span>
+	    <span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+
+<span class="token comment">/* Signal vector template for Kernel user boundary */</span>
+<span class="token keyword">struct</span>  <span class="token class-name">__sigaction</span> <span class="token punctuation">&#123;</span>
+	<span class="token keyword">union</span> __sigaction_u __sigaction_u<span class="token punctuation">;</span>  <span class="token comment">/* signal handler */</span>
+	<span class="token keyword">void</span>    <span class="token punctuation">(</span><span class="token operator">*</span>sa_tramp<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">,</span> <span class="token keyword">int</span><span class="token punctuation">,</span> <span class="token keyword">int</span><span class="token punctuation">,</span> siginfo_t <span class="token operator">*</span><span class="token punctuation">,</span> <span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//已被废弃的参数，不填</span>
+	sigset_t sa_mask<span class="token punctuation">;</span>               <span class="token comment">/* signal mask to apply */</span>
+	<span class="token keyword">int</span>     sa_flags<span class="token punctuation">;</span>               <span class="token comment">/* see signal options below */</span> <span class="token comment">//在信号处理函数执行中，是 "临时" 屏蔽指定信号</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+
+<span class="token comment">/* if SA_SIGINFO is set, sa_sigaction is to be used instead of sa_handler. */</span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">sa_handler</span>      <span class="token expression">__sigaction_u<span class="token punctuation">.</span>__sa_handler</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">sa_sigaction</span>    <span class="token expression">__sigaction_u<span class="token punctuation">.</span>__sa_sigaction</span></span>
+
+
+<span class="token comment">//--------------------------------------------------------------------</span>
+<span class="token comment">//__sigaction() 函数也可以 改为使用 sigaction() 函数</span>
+<span class="token comment">/*
+ * Signal vector "template" used in sigaction call.
+ */</span>
+<span class="token keyword">struct</span>  <span class="token class-name">sigaction</span> <span class="token punctuation">&#123;</span>
+	<span class="token keyword">union</span> __sigaction_u __sigaction_u<span class="token punctuation">;</span>  <span class="token comment">/* signal handler */</span>
+	sigset_t sa_mask<span class="token punctuation">;</span>               <span class="token comment">/* signal mask to apply */</span>
+	<span class="token keyword">int</span>     sa_flags<span class="token punctuation">;</span>               <span class="token comment">/* see signal options below */</span>
+<span class="token punctuation">&#125;</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+
+<ul>
+<li><strong>参数：</strong><ul>
+<li>sig： 捕捉的信号</li>
+<li>act： 新的，将要执行的自定义动作的设定操作</li>
+<li>oact： 被设置之前的旧的设定的操作吗，一般不需要，传入 NULL</li>
+</ul>
+</li>
+</ul>
+<p>restrict是c99标准引入的，它只可以用于限定和约束指针，并表明指针是访问一个数据对象的唯一且初始的方式.即它告诉编译器，所有修改该指针所指向内存中内容的操作都必须通过该指针来修改,而不能通过其它途径(其它变量或指针)来修改;这样做的好处是,能帮助编译器进行更好的优化代码,生成更有效率的汇编代码.如 int *restrict ptr, ptr 指向的内存单元只能被 ptr 访问到，任何同样指向这个内存单元的其他指针都是未定义的，直白点就是无效指针(野指针)。这个关键字只能在C99标准的C程序里使用，C++程序不支持，restrict的起源最早可以追溯到Fortran。</p>
+<ul>
+<li><p><strong>写一个例子：</strong></p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;unistd.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sys/wait.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sys/time.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;signal.h></span></span>
+
+<span class="token keyword">void</span> <span class="token function">func</span><span class="token punctuation">(</span><span class="token keyword">int</span> no<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">//用作回调函数</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    __sigaction_u sigactu<span class="token punctuation">;</span>
+    sigactu<span class="token punctuation">.</span>__sa_handler <span class="token operator">=</span> func<span class="token punctuation">;</span> <span class="token comment">//另一个变量 sigactu.__sa_sigaction 不用赋值</span>
+
+    <span class="token keyword">struct</span> <span class="token class-name">sigaction</span> act<span class="token punctuation">;</span>
+    act<span class="token punctuation">.</span>sa_flags <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>     <span class="token comment">//通常给 0</span>
+    act<span class="token punctuation">.</span>__sigaction_u <span class="token operator">=</span> sigactu<span class="token punctuation">;</span>
+    <span class="token function">sigemptyset</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>act<span class="token punctuation">.</span>sa_mask<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//清空 自定义信号集</span>
+    <span class="token function">sigaddset</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>act<span class="token punctuation">.</span>sa_mask<span class="token punctuation">,</span> SIGQUIT<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//向指定 系统阻塞集 中写入 自定义的信号集，添加需要屏蔽的信号(ctrl + 反斜杠 触发)</span>
+
+    <span class="token function">sigaction</span><span class="token punctuation">(</span>SIGINT<span class="token punctuation">,</span> <span class="token operator">&amp;</span>act<span class="token punctuation">,</span> <span class="token constant">NULL</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"Keep the thread running for the non-death state.\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">sleep</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+    
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">void</span> <span class="token function">func</span><span class="token punctuation">(</span><span class="token keyword">int</span> no<span class="token punctuation">)</span> 
+<span class="token punctuation">&#123;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"捕捉的信号为: %d\n"</span><span class="token punctuation">,</span> no<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">sleep</span><span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"醒了\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></li>
+<li><p><strong>分析运行：</strong></p>
+<p>这里故意运行两次：</p>
+<p><font color=#D0087E size=4 face="幼圆"><strong>第一次：</strong></font>  先按下 <code>ctrl + c</code> 发射 2 号信号 <code>SIGINT</code>， 等待其收到信号后，<strong>执行 3s 后</strong> ，将 func() 内容跑完，<strong>再次按下</strong>  <code>ctrl + \</code> 发射其他信号 <code>SIGINT</code>，系统收到后，<font color=#FF0000  size=4 face="幼圆">程序立即死亡（此时该 <code>SIGINT</code> 已经过了临死屏蔽的状态）</font></p>
+<p><font color=#D0087E size=4 face="幼圆"><strong>第二次：</strong></font>  先按下 <code>ctrl + c</code> 发射 2 号信号 <code>SIGINT</code>， 等待其收到信号后，<strong>执行不到 3s</strong>  ，func() 内容还没跑完，<strong>立即按下</strong>  <code>ctrl + \</code> 发射其他信号 <code>SIGINT</code>，系统收到后，<font color=#FF0000  size=4 face="幼圆">程序没有立即死亡（此时该 <code>SIGINT</code> 正处于临死屏蔽的状态）， 而是过了几秒钟在死亡。</font></p>
+</li>
+<li><p><strong>运行效果:</strong></p>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200410_224339.png" width="60%"/ loading="lazy"></li>
+</ul>
+<br>
+
+<h4 id="Linux-中的-sigaction-函数："><a href="#Linux-中的-sigaction-函数：" class="headerlink" title="Linux 中的 sigaction() 函数："></a>Linux 中的 sigaction() 函数：</h4><p>Linux 中的该函数，和 Unix 有点不一致，<strong>但主要填写的四个参数是一样的，这是不变的；</strong> </p>
+<p>这里贴出 Linux 下的函数原型，可以和 Unix 下的 <code>sigaction()</code> 比较一下：</p>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200410_221353.png" width="70%"/ loading="lazy">
+
+
+
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200410_221434.png" width="70%"/ loading="lazy">
+
+<br>
+
+<h3 id="下载地址："><a href="#下载地址：" class="headerlink" title="下载地址："></a>下载地址：</h3><p> <a target="_blank" rel="noopener" href="https://github.com/xmuli/linuxExample/tree/master/15_sys_usr_signal">15_sys_usr_signal</a></p>
+<p>欢迎 star 和 fork 这个系列的 linux 学习，附学习由浅入深的目录。</p>
+</div><div id="reward-container"><span class="hty-icon-button button-glow" id="reward-button" title="打赏" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === &quot;none&quot;) ? &quot;block&quot; : &quot;none&quot;;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-hand-coin-line"></use></svg></span><div id="reward-comment">若文章有所感所获，亦可请我共饮一杯肥宅冰阔落；</div><div id="qr" style="display:none;"><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png" alt="支付宝" title="支付宝"></a><div><span style="color:#00A3EE"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-alipay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png" alt="微信支付" title="微信支付"></a><div><span style="color:#2DC100"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-wechat-pay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png" alt="QQ 支付" title="QQ 支付"></a><div><span style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></span></div></div></div></div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>偕臧</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="https://ifmet.cn/posts/1a716682/" title="Linux中未决信号集和阻塞信号集的状态关系sigaddset，以及捕捉信号函数signal、sigaction">https://ifmet.cn/posts/1a716682/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"><a class="post-nav-prev" href="/posts/2c6bb236/" rel="prev" title="Linux中创建守护进程setsid()"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-left-s-line"></use></svg><span class="post-nav-text">Linux中创建守护进程setsid()</span></a></div><div class="post-nav-item"><a class="post-nav-next" href="/posts/cef3b890/" rel="next" title="Linux中系统信号初识，和函数kill，raise，abort，alarm，setitimer"><span class="post-nav-text">Linux中系统信号初识，和函数kill，raise，abort，alarm，setitimer</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div class="hty-card" id="comment"><div class="comment-tooltip text-center"><span></span><br></div><div id="valine-container"></div><script>Yun.utils.getScript("https://cdn.jsdelivr.net/npm/valine@latest/dist/Valine.min.js", () => {
+  const valineConfig = {"enable":true,"appId":"j1ERzyBCVwKtzx1t7EOv5ur8-MdYXbMMI","appKey":"EuraMPDEgt5G8iLWSNrkQ49n","placeholder":"不同的观点和想法相遇，促进彼此的成长，当然，这里也可以俏皮一下 (´・ω・`) ~~~ (填写邮箱可以收到回复)","avatar":"wavatar","pageSize":10,"visitor":true,"highlight":true,"recordIP":true,"enableQQ":true,"meta":["nick","mail","link"],"el":"#valine-container","lang":"zh-cn"}
+  valineConfig.path = "/posts/1a716682/"
+  new Valine(valineConfig)
+}, window.Valine);</script></div></main><footer class="sidebar-translate" id="footer"><div class="beian"><a rel="noopener" href="https://beian.miit.gov.cn/" target="_blank">鄂ICP备2021002780号</a></div><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> 偕臧</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.4.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.5.2</span></div><div class="live_time"><span>本博客已萌萌哒地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  setTimeout(blog_live_time, 1000);
+  const start = new Date('2019-06-09T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="goUp" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><a class="popup-trigger hty-icon-button icon-search" id="search" href="javascript:;" title="搜索"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-search-line"></use></svg></span></a><script>window.addEventListener("DOMContentLoaded", () => {
+  // Handle and trigger popup window
+  document.querySelector(".popup-trigger").addEventListener("click", () => {
+    document.querySelector(".popup").classList.add("show");
+    setTimeout(() => {
+      document.querySelector(".search-input").focus();
+    }, 100);
+  });
+
+  // Monitor main search box
+  const onPopupClose = () => {
+    document.querySelector(".popup").classList.remove("show");
+  };
+
+  document.querySelector(".popup-btn-close").addEventListener("click", () => {
+    onPopupClose();
+  });
+
+  window.addEventListener("keyup", event => {
+    if (event.key === "Escape") {
+      onPopupClose();
+    }
+  });
+});
+</script><script src="/js/search/local-search.js" defer></script><div class="popup search-popup"><div class="search-header"><span class="popup-btn-close close-icon hty-icon-button"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-close-line"></use></svg></span></div><div class="search-input-container"><input class="search-input" id="local-search-input" type="text" placeholder="搜索..." value=""></div><div id="local-search-result"></div></div><script>const date = new Date();
+const today = (date.getMonth() + 1) + "-" + date.getDate()
+const mourn_days = ["4-4"]
+if (mourn_days.includes(today)) {
+  document.documentElement.style.filter = "grayscale(1)";
+}</script></div></body></html>

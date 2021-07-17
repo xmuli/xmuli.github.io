@@ -1,0 +1,283 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="偕臧"><meta name="copyright" content="偕臧"><meta name="generator" content="Hexo 5.4.0"><meta name="theme" content="hexo-theme-yun"><title>Linux中多线程使用信号量(信号灯)，和sem_wait()函数使用 | 偕臧</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.24/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_ed8vp4atwoj.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link id="light-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism.css" media="(prefers-color-scheme: light)"><link id="dark-prism-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@latest/themes/prism-tomorrow.css" media="(prefers-color-scheme: dark)"><link rel="shortcut icon" type="image/svg+xml" href="/favicon.ico"><link rel="mask-icon" href="/favicon.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/js/utils.js" as="script"><link rel="preload" href="/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"hostname":"ifmet.cn","root":"/","title":"偕臧的小站","version":"1.5.2","mode":"auto","copycode":true,"page":{"isPost":true},"i18n":{"placeholder":"搜索...","empty":"找不到您查询的内容: ${query}","hits":"找到 ${hits} 条结果","hits_time":"找到 ${hits} 条结果（用时 ${time} 毫秒）"},"anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"local_search":{"path":"/search.xml"},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><link rel="stylesheet" href="/css/hexo-theme-yun.css"><script src="/js/utils.js"></script><script src="/js/hexo-theme-yun.js"></script><link rel="alternate" href="/atom.xml" title="偕臧" type="application/atom+xml"><link rel="preconnect" href="https://www.google-analytics.com" crossorigin><script async src="https://www.googletagmanager.com/gtag/js?id=UA-160972149-1"></script><script>if (CONFIG.hostname === location.hostname) {
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-160972149-1');
+}</script><meta name="description" content="简  述：　上一篇中讲解了“条件变量 + 互斥量”的组合使用，演示了 “生产者-消费者”模型。本篇讲解 互斥量的升级版：信号量（信号灯） 的理解和使用。互斥量与信号量的关系，可以简单理解为 c 和 c++ 的关系。信号量的使用的步骤，也是和前面的互斥量很像，不过这次的头文件改为了 #include &lt;semaphore.h&gt;:  sem_t sem; &#x2F;&#x2F;定义变量 sem_wait">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux中多线程使用信号量(信号灯)，和sem_wait()函数使用">
+<meta property="og:url" content="https://ifmet.cn/posts/67949f28/index.html">
+<meta property="og:site_name" content="偕臧">
+<meta property="og:description" content="简  述：　上一篇中讲解了“条件变量 + 互斥量”的组合使用，演示了 “生产者-消费者”模型。本篇讲解 互斥量的升级版：信号量（信号灯） 的理解和使用。互斥量与信号量的关系，可以简单理解为 c 和 c++ 的关系。信号量的使用的步骤，也是和前面的互斥量很像，不过这次的头文件改为了 #include &lt;semaphore.h&gt;:  sem_t sem; &#x2F;&#x2F;定义变量 sem_wait">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200502_020639.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200502_021414.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200502_020625.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200502_014422.gif">
+<meta property="article:published_time" content="2020-05-02T00:47:27.000Z">
+<meta property="article:modified_time" content="2020-05-02T00:47:27.000Z">
+<meta property="article:author" content="偕臧">
+<meta property="article:tag" content="偕臧, xmuli, c++, Qt, 哲学">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200502_020639.png"><script src="/js/ui/mode.js"></script></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest"></script><script defer src="/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/about/" title="偕臧"><img width="96" loading="lazy" src="/xmuli.png" alt="偕臧"><span class="site-author-status" title="一片四叶幸运草">🍀</span></a><div class="site-author-name"><a href="/about/">偕臧</a></div><a class="site-name" href="/about/site.html">偕臧</a><sub class="site-subtitle"></sub><div class="site-desciption">看待世界始终保持着好奇</div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">245</span></a></div><div class="site-state-item"><a href="/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">25</span></a></div><div class="site-state-item"><a href="/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">29</span></a></div><a class="site-state-item hty-icon-button" href="https://ifmet.cn/about" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><div class="links-of-author"><a class="links-of-author-item hty-icon-button" rel="noopener" href="/atom.xml" title="RSS" target="_blank" style="color:orange"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-rss-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="http://sighttp.qq.com/authd?IDKEY=31f3ef7312b39e2c8dc822ae2f4c3b3118e1a6f31cc83373" title="QQ" target="_blank" style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://github.com/xmuli" title="GitHub" target="_blank" style="color:#181717"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-github-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="mailto:xmulitech@gmail.com" title="E-Mail" target="_blank" style="color:#8E71C1"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-mail-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://space.bilibili.com/106940738" title="哔哩哔哩动画" target="_blank" style="color:#FF8EB3"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-bilibili-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://twitter.com/xmulite" title="Twitter" target="_blank" style="color:#1da1f2"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-twitter-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://t.me/xmuli" title="Telegram" target="_blank" style="color:#0088CC"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-telegram-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://xmuli.blog.csdn.net" title="Travelling" target="_blank" style="color:var(--hty-text-color)"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-send-plane-2-line"></use></svg></a></div><hr style="margin:0.5rem 1rem"><div class="links"><a class="links-item hty-icon-button" href="/links/" title="友链直达" style="color:dodgerblue"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-women-line"></use></svg></a><a class="links-item hty-icon-button" href="/learn/" title="学习他人" style="color:Pink"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-heart-line"></use></svg></a></div><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%96%E7%A8%8B%E7%8E%AF%E5%A2%83%EF%BC%9A"><span class="toc-number">1.</span> <span class="toc-text">编程环境：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%A1%E5%8F%B7%E9%87%8F-%E4%BF%A1%E5%8F%B7%E7%81%AF-%EF%BC%9A"><span class="toc-number">2.</span> <span class="toc-text">信号量(信号灯)：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E6%AD%A5%E9%AA%A4%EF%BC%9A"><span class="toc-number">3.</span> <span class="toc-text">使用步骤：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E2%80%9C%E7%94%9F%E4%BA%A7%E8%80%85-%E6%B6%88%E8%B4%B9%E8%80%85%E2%80%9D%E4%BE%8B%E5%AD%90%EF%BC%9A"><span class="toc-number">4.</span> <span class="toc-text">“生产者-消费者”例子：</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%90%86%E8%AE%BA%E6%A8%A1%E5%9E%8B%EF%BC%9A"><span class="toc-number">4.1.</span> <span class="toc-text">理论模型：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%9A"><span class="toc-number">4.2.</span> <span class="toc-text">代码分析：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0%EF%BC%9A"><span class="toc-number">4.3.</span> <span class="toc-text">代码实现：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%BF%90%E8%A1%8C%E7%BB%93%E6%9E%9C%EF%BC%9A"><span class="toc-number">4.4.</span> <span class="toc-text">运行结果：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Mac-%E4%B8%8B%E5%AF%B9-sem-init-sem-destory-%E4%B8%8D%E6%94%AF%E6%8C%81%EF%BC%9A"><span class="toc-number">5.</span> <span class="toc-text">Mac 下对 sem_init()&#x2F;sem_destory() 不支持：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80%EF%BC%9A"><span class="toc-number">6.</span> <span class="toc-text">下载地址：</span></a></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="hty-card post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="https://ifmet.cn/posts/67949f28/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="偕臧"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="偕臧"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Linux中多线程使用信号量(信号灯)，和sem_wait()函数使用<a class="post-edit-link" href="https://github.com/xmuli/xmuliMark/tree/master/source/_posts/Linux中多线程使用信号量(信号灯)，和sem_wait()函数使用.md" target="_blank" title="编辑" rel="noopener"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-edit-line"></use></svg></a></h1><div class="post-meta"><div class="post-time" style="display:block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2020-05-02 00:47:27" itemprop="dateCreated datePublished" datetime="2020-05-02T00:47:27+00:00">2020-05-02</time></div><span class="post-count"><span class="post-symbolcount"><span class="post-meta-item-icon" title="本文字数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-file-word-line"></use></svg></span> <span title="本文字数">1.2k</span><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读时长"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-timer-line"></use></svg></span> <span title="阅读时长">5m</span></span></span><span class="leancloud_visitors" id="/posts/67949f28/" data-flag-title="Linux中多线程使用信号量(信号灯)，和sem_wait()函数使用"><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读次数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-eye-line"></use></svg> <span class="leancloud-visitors-count"></span></span></span><div class="post-classify"><span class="post-category"> <span class="post-meta-item-icon" style="margin-right:3px;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span><span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/categories/%E5%AD%A6%E4%B9%A0-Linux/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">学习 - Linux</span></a></span></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><p>　　<strong>简  述：</strong>　<a target="_blank" rel="noopener" href="https://xmuli.blog.csdn.net/article/details/105885580">上一篇</a>中讲解了“条件变量 + 互斥量”的组合使用，演示了 “生产者-消费者”模型。本篇讲解 互斥量的升级版：<strong>信号量（信号灯）</strong> 的理解和使用。互斥量与信号量的关系，可以简单理解为 c 和 c++ 的关系。信号量的使用的步骤，也是和前面的互斥量很像，不过这次的头文件改为了 <code>#include &lt;semaphore.h&gt;</code>:</p>
+<ul>
+<li>sem_t sem; //定义变量</li>
+<li>sem_wait();  //加锁</li>
+<li>…其他代码</li>
+<li>sem_post();  //解锁</li>
+<li>sem_destroy();  //销毁</li>
+</ul>
+<p><font color=#D0087E size=4 face="幼圆">说明：</font></p>
+<p><strong>本例子是在 Linux 下面运行成功的，编译时候，时候需要加参数 <code>-pthread</code> 。</strong></p>
+<p>若是想要在 Mac 运行改程序，需要改写替换部分函数(mac 不支持其中的部分函数)</p>
+<span id="more"></span>
+
+<p>[TOC]</p>
+<br>
+
+<blockquote>
+<p><font color=#D0087E size=4 face="STFangsong">本文初发于 <strong>“偕臧的小站”</strong>  <a href="https://ifmet.cn/">ifmet.cn</a>，同步转载于此。</font></p>
+</blockquote>
+<br>
+
+<h3 id="编程环境："><a href="#编程环境：" class="headerlink" title="编程环境："></a>编程环境：</h3><p>　　<strong>💻：</strong>  <code>uos20</code> 📎 <code>gcc/g++ 8.3</code> 📎 <code>gdb8.0</code> </p>
+<p>　　<strong>💻：</strong>  <code>MacOS 10.14 </code> 📎 <code>gcc/g++ 9.2</code> 📎 <code>gdb8.3</code> </p>
+<br>
+
+<h3 id="信号量-信号灯-："><a href="#信号量-信号灯-：" class="headerlink" title="信号量(信号灯)："></a>信号量(信号灯)：</h3><p>简单理解为里面具有多个互斥量的集合。是加强版的互斥锁。</p>
+<p><strong>其他：</strong></p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp">sem_t sem<span class="token punctuation">;</span> 
+<span class="token keyword">int</span> <span class="token function">sem_init</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span>sem<span class="token punctuation">,</span> <span class="token keyword">int</span> pshared<span class="token punctuation">,</span> <span class="token keyword">unsigned</span> <span class="token keyword">int</span> value<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>之间的一些解释：</p>
+<p>sem 变量和 函数 sem_init 中的 sem 参数是同一个；在函数里面，第一个参数 sem 实际是和第三个参数 value 关联的；表面上对 sem 进行修改，实际上是修改关联的 value 的值，对其进行 ++ 或 – 操作。（嗯嗯，原理就这么理解就行）。</p>
+<br>
+
+<h3 id="使用步骤："><a href="#使用步骤：" class="headerlink" title="使用步骤："></a>使用步骤：</h3><ol>
+<li><p>sem_t sem; </p>
+<br></li>
+<li><p>初始化信号量</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">sem_init</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span>sem<span class="token punctuation">,</span> <span class="token keyword">int</span> pshared<span class="token punctuation">,</span> <span class="token keyword">unsigned</span> <span class="token keyword">int</span> value<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<ul>
+<li><strong>参数：</strong><ul>
+<li>pshared：<ul>
+<li>0 - 线程同步</li>
+<li>1 - 进程同步</li>
+</ul>
+</li>
+<li>value：<ul>
+<li>最多有几个线程操作共享数据</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<br></li>
+<li><p>加锁:</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token comment">//调用一次相当于对 sem 做了一次 -- 操作</span>
+<span class="token keyword">int</span> <span class="token function">sem_wait</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span>sem<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//加锁； => 如果 sem 值为 0，线程会阻塞</span>
+
+<span class="token keyword">int</span> <span class="token function">sem_trywait</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span>sem<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//尝试加锁； => sem == 0，加锁失败，不阻塞，直接返回</span>
+
+<span class="token keyword">int</span> <span class="token function">sem_timedwait</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span>sem<span class="token punctuation">,</span> <span class="token keyword">const</span> <span class="token keyword">struct</span> <span class="token class-name">timespec</span> <span class="token operator">*</span>abs_timeout<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//限时尝试加锁</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<br></li>
+<li><p>解锁:</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">sem_post</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span>sem<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//相当于对于 sem 做了 ++ 操作</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<br></li>
+<li><p>销毁信号量</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token keyword">int</span> <span class="token function">sem_destroy</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span>sem<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<br></li>
+</ol>
+<h3 id="“生产者-消费者”例子："><a href="#“生产者-消费者”例子：" class="headerlink" title="“生产者-消费者”例子："></a>“生产者-消费者”例子：</h3><p>将上一篇的例子改一改，直接使用信号量来写这个例子“生产者-消费者”。本篇文章例子如下：</p>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200502_020639.png" width="80%"/ loading="lazy">
+
+<br>
+
+<h4 id="理论模型："><a href="#理论模型：" class="headerlink" title="理论模型："></a>理论模型：</h4> <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200502_021414.png" width="90%"/ loading="lazy">
+
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200502_020625.png" width="60%"/ loading="lazy">
+
+<br>
+
+<h4 id="代码分析："><a href="#代码分析：" class="headerlink" title="代码分析："></a>代码分析：</h4><p>多看一下理论模型的那个伪代码的流程图，多体会揣摩其中的箭头的流向，且一开始这设置为消费者为阻塞，当生产者生产之后，为其解锁。</p>
+<br>
+
+<h4 id="代码实现："><a href="#代码实现：" class="headerlink" title="代码实现："></a>代码实现：</h4><pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;unistd.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;pthread.h></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;semaphore.h></span></span>
+
+sem_t semProducer<span class="token punctuation">;</span>
+sem_t semCustomer<span class="token punctuation">;</span>
+
+<span class="token keyword">typedef</span> <span class="token keyword">struct</span> <span class="token class-name">node</span>  <span class="token comment">//节点结构</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">int</span> data<span class="token punctuation">;</span>
+    <span class="token keyword">struct</span> <span class="token class-name">node</span><span class="token operator">*</span> next<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span> Node<span class="token punctuation">;</span>
+
+Node<span class="token operator">*</span> g_head <span class="token operator">=</span>  <span class="token keyword">nullptr</span><span class="token punctuation">;</span>  <span class="token comment">//永远指向链表头部的指针</span>
+
+<span class="token keyword">void</span><span class="token operator">*</span> <span class="token function">funProducer</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token operator">*</span> arg<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//生产者--添加一个头结点</span>
+<span class="token keyword">void</span><span class="token operator">*</span> <span class="token function">funCustomer</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token operator">*</span> arg<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//消费者--删除一个头结点</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    pthread_t p1<span class="token punctuation">;</span>
+    pthread_t p2<span class="token punctuation">;</span>
+
+    <span class="token function">sem_init</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>semProducer<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//初始化生产者线程信号量， （赋予 4 个，对比下一行，让生产者先运行）</span>
+    <span class="token function">sem_init</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>semCustomer<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//初始化消费者线程信号量， (赋予 0 个， 一开始就让消费者处于阻塞状态)</span>
+
+    <span class="token function">pthread_create</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>p1<span class="token punctuation">,</span> <span class="token keyword">nullptr</span><span class="token punctuation">,</span> funProducer<span class="token punctuation">,</span> <span class="token keyword">nullptr</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//创建生产者线程</span>
+    <span class="token function">pthread_create</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>p2<span class="token punctuation">,</span> <span class="token keyword">nullptr</span><span class="token punctuation">,</span> funCustomer<span class="token punctuation">,</span> <span class="token keyword">nullptr</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//创建消费者线程</span>
+
+    <span class="token function">pthread_join</span><span class="token punctuation">(</span>p1<span class="token punctuation">,</span> <span class="token keyword">nullptr</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//阻塞回收子线程</span>
+    <span class="token function">pthread_join</span><span class="token punctuation">(</span>p2<span class="token punctuation">,</span> <span class="token keyword">nullptr</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token function">sem_destroy</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>semProducer<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//销毁生产者信号量</span>
+    <span class="token function">sem_destroy</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>semCustomer<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//销毁消费者信号量</span>
+
+    <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">void</span><span class="token operator">*</span> <span class="token function">funProducer</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token operator">*</span> arg<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">sem_wait</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>semProducer<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//semProducer--，  == 0， 则阻塞</span>
+        Node<span class="token operator">*</span> pNew <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token function">Node</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        pNew<span class="token operator">-></span>data <span class="token operator">=</span> <span class="token function">rand</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">%</span> <span class="token number">1000</span><span class="token punctuation">;</span> 
+        pNew<span class="token operator">-></span>next <span class="token operator">=</span> g_head<span class="token punctuation">;</span>
+        g_head <span class="token operator">=</span> pNew<span class="token punctuation">;</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"-----funProducer(生产者): %lu, %d\n"</span><span class="token punctuation">,</span> <span class="token function">pthread_self</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> pNew<span class="token operator">-></span>data<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">sem_post</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>semCustomer<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// semCustomer++</span>
+
+        <span class="token function">sleep</span><span class="token punctuation">(</span><span class="token function">rand</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">%</span> <span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//随机休息 0~2 s</span>
+    <span class="token punctuation">&#125;</span>
+    
+    <span class="token keyword">return</span> <span class="token keyword">nullptr</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">void</span><span class="token operator">*</span> <span class="token function">funCustomer</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token operator">*</span> arg<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+    <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">sem_wait</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>semCustomer<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//semCustomer--，  == 0， 则阻塞</span>
+        Node<span class="token operator">*</span> pDel <span class="token operator">=</span> g_head<span class="token punctuation">;</span>
+        g_head <span class="token operator">=</span> g_head<span class="token operator">-></span>next<span class="token punctuation">;</span>
+        <span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"-----funCustomer(消费者): %lu, %d\n"</span><span class="token punctuation">,</span> <span class="token function">pthread_self</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> pDel<span class="token operator">-></span>data<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">delete</span> pDel<span class="token punctuation">;</span>
+        <span class="token function">sem_post</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>semProducer<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// semProducer++</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">return</span> <span class="token keyword">nullptr</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<br>
+
+<h4 id="运行结果："><a href="#运行结果：" class="headerlink" title="运行结果："></a>运行结果：</h4><p>这个例子是在 uos20 上面运行的成功的；编译的时候，记得加上参数 <code>-pthread</code> 。</p>
+ <img src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200502_014422.gif" width="90%"/ loading="lazy">
+
+<br>
+
+<h3 id="Mac-下对-sem-init-sem-destory-不支持："><a href="#Mac-下对-sem-init-sem-destory-不支持：" class="headerlink" title="Mac 下对 sem_init()/sem_destory() 不支持："></a>Mac 下对 sem_init()/sem_destory() 不支持：</h3><p><font color=#D0087E size=4 face="幼圆"><strong>注意：</strong> </font></p>
+<p>MacOS 不支持 <code>sem_init()</code> 和 <code>sem_destroy()</code>；这个例子若是想在 mac 下编译通过，需要自行修改替换相关的函数。</p>
+<ul>
+<li><code>sem_init(&amp;sem, 0, 1)</code> 改成 <code>sem_open(&quot;sem&quot;, O_CREAT|O_EXCL, S_IRWXU, 0)</code></li>
+<li><code>sem_destory(&amp;sem)</code> 改成 <code>sem_unlink(&quot;sem&quot;);</code></li>
+<li>且支持 <code>pthread_mutex_init(&amp;mutex, NULL)</code> 却不支持 <code>pthread_mutex_destory(&amp;mutex)</code></li>
+</ul>
+<br>
+
+<p>Mac 的该文件在 <code>/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/semaphore.h</code> 路径，可以查看到该头文件的源码，附上详细 mac 下该库源码：</p>
+<pre class="line-numbers language-cpp" data-language="cpp"><code class="language-cpp"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">ifndef</span> <span class="token expression">_SYS_SEMAPHORE_H_</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">_SYS_SEMAPHORE_H_</span></span>
+
+<span class="token keyword">typedef</span> <span class="token keyword">int</span> sem_t<span class="token punctuation">;</span>
+
+<span class="token comment">/* this should go in limits.h> */</span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">SEM_VALUE_MAX</span> <span class="token expression"><span class="token number">32767</span></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">SEM_FAILED</span> <span class="token expression"><span class="token punctuation">(</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span><span class="token punctuation">)</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span></span></span>
+
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;sys/cdefs.h></span></span>
+
+__BEGIN_DECLS
+<span class="token keyword">int</span> <span class="token function">sem_close</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">int</span> <span class="token function">sem_destroy</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span><span class="token punctuation">)</span> __deprecated<span class="token punctuation">;</span>
+<span class="token keyword">int</span> <span class="token function">sem_getvalue</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span> __restrict<span class="token punctuation">,</span> <span class="token keyword">int</span> <span class="token operator">*</span> __restrict<span class="token punctuation">)</span> __deprecated<span class="token punctuation">;</span>
+<span class="token keyword">int</span> <span class="token function">sem_init</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span><span class="token punctuation">,</span> <span class="token keyword">int</span><span class="token punctuation">,</span> <span class="token keyword">unsigned</span> <span class="token keyword">int</span><span class="token punctuation">)</span> __deprecated<span class="token punctuation">;</span>
+sem_t <span class="token operator">*</span> <span class="token function">sem_open</span><span class="token punctuation">(</span><span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span><span class="token punctuation">,</span> <span class="token keyword">int</span><span class="token punctuation">,</span> <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">int</span> <span class="token function">sem_post</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">int</span> <span class="token function">sem_trywait</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">int</span> <span class="token function">sem_unlink</span><span class="token punctuation">(</span><span class="token keyword">const</span> <span class="token keyword">char</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">int</span> <span class="token function">sem_wait</span><span class="token punctuation">(</span>sem_t <span class="token operator">*</span><span class="token punctuation">)</span> <span class="token function">__DARWIN_ALIAS_C</span><span class="token punctuation">(</span>sem_wait<span class="token punctuation">)</span><span class="token punctuation">;</span>
+__END_DECLS
+
+
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">endif</span>  <span class="token comment">/* _SYS_SEMAPHORE_H_ */</span></span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<br>
+
+<h3 id="下载地址："><a href="#下载地址：" class="headerlink" title="下载地址："></a>下载地址：</h3><p> <a target="_blank" rel="noopener" href="https://github.com/xmuli/linuxExample/tree/master/21_semaphore">21_semaphore</a></p>
+<p>欢迎 star 和 fork 这个系列的 linux 学习，附学习由浅入深的目录。</p>
+</div><div id="reward-container"><span class="hty-icon-button button-glow" id="reward-button" title="打赏" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === &quot;none&quot;) ? &quot;block&quot; : &quot;none&quot;;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-hand-coin-line"></use></svg></span><div id="reward-comment">若文章有所感所获，亦可请我共饮一杯肥宅冰阔落；</div><div id="qr" style="display:none;"><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013332.png" alt="支付宝" title="支付宝"></a><div><span style="color:#00A3EE"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-alipay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013449.png" alt="微信支付" title="微信支付"></a><div><span style="color:#2DC100"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-wechat-pay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png"><img loading="lazy" src="https://cdn.jsdelivr.net/gh/xmuli/xmuliPic@pic/2020/20200701013628.png" alt="QQ 支付" title="QQ 支付"></a><div><span style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></span></div></div></div></div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>偕臧</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="https://ifmet.cn/posts/67949f28/" title="Linux中多线程使用信号量(信号灯)，和sem_wait()函数使用">https://ifmet.cn/posts/67949f28/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"><a class="post-nav-prev" href="/posts/e78f52cc/" rel="prev" title="元对象系统moc(Meat-Object System)的对象MetaObject和(含动态)属性Propert的用法"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-left-s-line"></use></svg><span class="post-nav-text">元对象系统moc(Meat-Object System)的对象MetaObject和(含动态)属性Propert的用法</span></a></div><div class="post-nav-item"><a class="post-nav-next" href="/posts/1b3fd61f/" rel="next" title="Linux中多线程使用条件变量阻塞线程，和pthread_cond_wait()函数使用"><span class="post-nav-text">Linux中多线程使用条件变量阻塞线程，和pthread_cond_wait()函数使用</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div class="hty-card" id="comment"><div class="comment-tooltip text-center"><span></span><br></div><div id="valine-container"></div><script>Yun.utils.getScript("https://cdn.jsdelivr.net/npm/valine@latest/dist/Valine.min.js", () => {
+  const valineConfig = {"enable":true,"appId":"j1ERzyBCVwKtzx1t7EOv5ur8-MdYXbMMI","appKey":"EuraMPDEgt5G8iLWSNrkQ49n","placeholder":"不同的观点和想法相遇，促进彼此的成长，当然，这里也可以俏皮一下 (´・ω・`) ~~~ (填写邮箱可以收到回复)","avatar":"wavatar","pageSize":10,"visitor":true,"highlight":true,"recordIP":true,"enableQQ":true,"meta":["nick","mail","link"],"el":"#valine-container","lang":"zh-cn"}
+  valineConfig.path = "/posts/67949f28/"
+  new Valine(valineConfig)
+}, window.Valine);</script></div></main><footer class="sidebar-translate" id="footer"><div class="beian"><a rel="noopener" href="https://beian.miit.gov.cn/" target="_blank">鄂ICP备2021002780号</a></div><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> 偕臧</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.4.0</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v1.5.2</span></div><div class="live_time"><span>本博客已萌萌哒地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  setTimeout(blog_live_time, 1000);
+  const start = new Date('2019-06-09T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="goUp" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><a class="popup-trigger hty-icon-button icon-search" id="search" href="javascript:;" title="搜索"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-search-line"></use></svg></span></a><script>window.addEventListener("DOMContentLoaded", () => {
+  // Handle and trigger popup window
+  document.querySelector(".popup-trigger").addEventListener("click", () => {
+    document.querySelector(".popup").classList.add("show");
+    setTimeout(() => {
+      document.querySelector(".search-input").focus();
+    }, 100);
+  });
+
+  // Monitor main search box
+  const onPopupClose = () => {
+    document.querySelector(".popup").classList.remove("show");
+  };
+
+  document.querySelector(".popup-btn-close").addEventListener("click", () => {
+    onPopupClose();
+  });
+
+  window.addEventListener("keyup", event => {
+    if (event.key === "Escape") {
+      onPopupClose();
+    }
+  });
+});
+</script><script src="/js/search/local-search.js" defer></script><div class="popup search-popup"><div class="search-header"><span class="popup-btn-close close-icon hty-icon-button"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-close-line"></use></svg></span></div><div class="search-input-container"><input class="search-input" id="local-search-input" type="text" placeholder="搜索..." value=""></div><div id="local-search-result"></div></div><script>const date = new Date();
+const today = (date.getMonth() + 1) + "-" + date.getDate()
+const mourn_days = ["4-4"]
+if (mourn_days.includes(today)) {
+  document.documentElement.style.filter = "grayscale(1)";
+}</script></div></body></html>
